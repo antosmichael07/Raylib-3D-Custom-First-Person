@@ -36,10 +36,10 @@ func updatePlayer(player *Player) {
 }
 
 func movePlayer(player *Player) {
-	speeds := rl.Vector2{
-		X: float32(math.Cos(float64(player.rotation.X))) * player.speed * (rl.GetFrameTime() * 60),
-		Y: float32(math.Sin(float64(player.rotation.X))) * player.speed * (rl.GetFrameTime() * 60),
-	}
+	speeds := rl.NewVector2(
+		float32(math.Cos(float64(player.rotation.X)))*player.speed*(rl.GetFrameTime()*60),
+		float32(math.Sin(float64(player.rotation.X)))*player.speed*(rl.GetFrameTime()*60),
+	)
 
 	if rl.IsKeyDown(rl.KeyW) {
 		player.position.X -= speeds.X
