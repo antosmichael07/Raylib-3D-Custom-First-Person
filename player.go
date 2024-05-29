@@ -22,8 +22,8 @@ func initPlayer() Player {
 	player.mouse_sensitivity = .0025
 	player.fov = 70.
 	player.rotation = rl.NewVector2(0., 0.)
-	player.position = rl.NewVector3(4., 1., 4.)
-	player.scale = rl.NewVector3(1., 2., 1.)
+	player.position = rl.NewVector3(4., .9, 4.)
+	player.scale = rl.NewVector3(.8, 1.8, .8)
 	player.camera = initCamera(player)
 
 	return player
