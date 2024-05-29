@@ -8,6 +8,8 @@ import (
 
 type Player struct {
 	speed             float32
+	sprint_speed      float32
+	sneak_speed       float32
 	mouse_sensitivity float32
 	fov               float32
 	position          rl.Vector3
@@ -18,7 +20,9 @@ type Player struct {
 
 func initPlayer() Player {
 	player := Player{}
-	player.speed = .2
+	player.speed = .1
+	player.sprint_speed = .2
+	player.sneak_speed = .05
 	player.mouse_sensitivity = .0025
 	player.fov = 70.
 	player.rotation = rl.NewVector2(0., 0.)
@@ -36,9 +40,20 @@ func updatePlayer(player *Player) {
 }
 
 func movePlayer(player *Player) {
+	current_speed := player.speed
+	if rl.IsKeyDown(rl.KeyLeftShift) {
+		current_speed = player.sprint_speed
+	}
+	if rl.IsKeyDown(rl.KeyLeftControl) {
+		current_speed = player.sneak_speed
+	}
+	if rl.IsKeyDown(rl.KeyW) && rl.IsKeyDown(rl.KeyA) || rl.IsKeyDown(rl.KeyW) && rl.IsKeyDown(rl.KeyD) || rl.IsKeyDown(rl.KeyS) && rl.IsKeyDown(rl.KeyA) || rl.IsKeyDown(rl.KeyS) && rl.IsKeyDown(rl.KeyD) {
+		current_speed = current_speed * .707
+	}
+
 	speeds := rl.NewVector2(
-		float32(math.Cos(float64(player.rotation.X)))*player.speed*(rl.GetFrameTime()*60),
-		float32(math.Sin(float64(player.rotation.X)))*player.speed*(rl.GetFrameTime()*60),
+		float32(math.Cos(float64(player.rotation.X)))*current_speed*(rl.GetFrameTime()*60),
+		float32(math.Sin(float64(player.rotation.X)))*current_speed*(rl.GetFrameTime()*60),
 	)
 
 	if rl.IsKeyDown(rl.KeyW) {
