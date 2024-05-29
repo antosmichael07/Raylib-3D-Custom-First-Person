@@ -8,10 +8,10 @@ import (
 
 func initCamera(player Player) rl.Camera3D {
 	camera := rl.Camera3D{}
-	camera.Position = rl.NewVector3(player.position.X, player.position.Y+2., player.position.Z)
+	camera.Position = rl.NewVector3(player.position.X, player.position.Y+(player.scale.Y/2), player.position.Z)
 	camera.Target = rl.NewVector3(
 		player.camera.Position.X-float32(math.Cos(float64(player.rotation.X)))*float32(math.Cos(float64(player.rotation.Y))),
-		player.camera.Position.Y+float32(math.Sin(float64(player.rotation.Y)))+2.,
+		player.camera.Position.Y+float32(math.Sin(float64(player.rotation.Y)))+(player.scale.Y/2),
 		player.camera.Position.Z-float32(math.Sin(float64(player.rotation.X)))*float32(math.Cos(float64(player.rotation.Y))),
 	)
 	camera.Up = rl.NewVector3(0., 1., 0.)
@@ -27,7 +27,7 @@ func updateCamera(player *Player) {
 }
 
 func moveCamera(player *Player) {
-	player.camera.Position = rl.NewVector3(player.position.X, player.position.Y+2., player.position.Z)
+	player.camera.Position = rl.NewVector3(player.position.X, player.position.Y+(player.scale.Y/2), player.position.Z)
 }
 
 func rotateCamera(player *Player) {

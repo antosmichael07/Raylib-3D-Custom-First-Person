@@ -8,7 +8,7 @@ func main() {
 	rl.SetTraceLogLevel(rl.LogError)
 	current_monitor := rl.GetCurrentMonitor()
 
-	rl.InitWindow(int32(rl.GetMonitorWidth(current_monitor)), int32(rl.GetMonitorHeight(current_monitor)), "Test Raylib Go")
+	rl.InitWindow(int32(rl.GetMonitorWidth(current_monitor)), int32(rl.GetMonitorHeight(current_monitor)), "Raylib Testing")
 	rl.SetTargetFPS(int32(rl.GetMonitorRefreshRate(current_monitor)))
 	rl.ToggleFullscreen()
 	rl.DisableCursor()
