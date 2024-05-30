@@ -16,8 +16,10 @@ func main() {
 
 	player := initPlayer()
 
+	bounding_box := rl.NewBoundingBox(rl.NewVector3(-1., 1.5, -1.), rl.NewVector3(1., 3.5, 1.))
+
 	for !rl.WindowShouldClose() {
-		updatePlayer(&player)
+		updatePlayer(&player, bounding_box)
 
 		rl.BeginDrawing()
 		rl.ClearBackground(rl.Black)
@@ -27,6 +29,8 @@ func main() {
 
 		rl.BeginMode3D(player.camera)
 		{
+			rl.DrawBoundingBox(bounding_box, rl.Red)
+
 			rl.DrawGrid(20, 1.0)
 		}
 		rl.EndMode3D()

@@ -33,45 +33,24 @@ func initPlayer() Player {
 	return player
 }
 
-func updatePlayer(player *Player) {
-	movePlayer(player)
+func updatePlayer(player *Player, object rl.BoundingBox) {
+	movePlayer(player, object)
 	rotatePlayer(player)
-	updateCamera(player)
+	updateCameraFirstPerson(player)
 }
 
-func movePlayer(player *Player) {
-	current_speed := player.speed
-	if rl.IsKeyDown(rl.KeyLeftShift) {
-		current_speed = player.sprint_speed
-	}
+func movePlayer(player *Player, object rl.BoundingBox) {
 	if rl.IsKeyDown(rl.KeyLeftControl) {
-		current_speed = player.sneak_speed
-	}
-	if rl.IsKeyDown(rl.KeyW) && rl.IsKeyDown(rl.KeyA) || rl.IsKeyDown(rl.KeyW) && rl.IsKeyDown(rl.KeyD) || rl.IsKeyDown(rl.KeyS) && rl.IsKeyDown(rl.KeyA) || rl.IsKeyDown(rl.KeyS) && rl.IsKeyDown(rl.KeyD) {
-		current_speed = current_speed * .707
+		player.scale.Y = 1.
+	} else if !checkCollisionsForPlayer(*player, object) {
+		player.scale.Y = 2.
 	}
 
-	speeds := rl.NewVector2(
-		float32(math.Cos(float64(player.rotation.X)))*current_speed*(rl.GetFrameTime()*60),
-		float32(math.Sin(float64(player.rotation.X)))*current_speed*(rl.GetFrameTime()*60),
-	)
+	if checkCollisionsForPlayer(*player, object) {
+		return
+	}
 
-	if rl.IsKeyDown(rl.KeyW) {
-		player.position.X -= speeds.X
-		player.position.Z -= speeds.Y
-	}
-	if rl.IsKeyDown(rl.KeyS) {
-		player.position.X += speeds.X
-		player.position.Z += speeds.Y
-	}
-	if rl.IsKeyDown(rl.KeyA) {
-		player.position.Z += speeds.X
-		player.position.X -= speeds.Y
-	}
-	if rl.IsKeyDown(rl.KeyD) {
-		player.position.Z -= speeds.X
-		player.position.X += speeds.Y
-	}
+	player.position = getPlayerPositionAfterMoving(*player)
 }
 
 func rotatePlayer(player *Player) {
@@ -84,4 +63,54 @@ func rotatePlayer(player *Player) {
 
 	player.rotation.X += rl.GetMouseDelta().X * player.mouse_sensitivity
 	player.rotation.Y -= rl.GetMouseDelta().Y * player.mouse_sensitivity
+}
+
+func checkCollisionsForPlayer(player Player, object rl.BoundingBox) bool {
+	player.position = getPlayerPositionAfterMoving(player)
+	
+	if rl.CheckCollisionBoxes(rl.NewBoundingBox(rl.NewVector3(player.position.X - player.scale.X / 2, player.position.Y - player.scale.Y / 2, player.position.Z - player.scale.Z / 2), 
+	rl.NewVector3(player.position.X + player.scale.X / 2, player.position.Y + player.scale.Y / 2, player.position.Z + player.scale.Z / 2)), object) {
+		return true
+	}
+	return false
+}
+
+func getPlayerPositionAfterMoving(player Player) rl.Vector3 {
+	position := player.position
+
+	current_speed := player.speed
+	if rl.IsKeyDown(rl.KeyLeftShift) {
+		current_speed = player.sprint_speed
+	}
+	if rl.IsKeyDown(rl.KeyLeftControl) {
+		current_speed = player.sneak_speed
+		player.scale.Y = 1.
+	}
+	if rl.IsKeyDown(rl.KeyW) && rl.IsKeyDown(rl.KeyA) || rl.IsKeyDown(rl.KeyW) && rl.IsKeyDown(rl.KeyD) || rl.IsKeyDown(rl.KeyS) && rl.IsKeyDown(rl.KeyA) || rl.IsKeyDown(rl.KeyS) && rl.IsKeyDown(rl.KeyD) {
+		current_speed = current_speed * .707
+	}
+
+	speeds := rl.NewVector2(
+		float32(math.Cos(float64(player.rotation.X)))*current_speed*(rl.GetFrameTime()*60),
+		float32(math.Sin(float64(player.rotation.X)))*current_speed*(rl.GetFrameTime()*60),
+	)
+
+	if rl.IsKeyDown(rl.KeyW) {
+		position.X -= speeds.X
+		position.Z -= speeds.Y
+	}
+	if rl.IsKeyDown(rl.KeyS) {
+		position.X += speeds.X
+		position.Z += speeds.Y
+	}
+	if rl.IsKeyDown(rl.KeyA) {
+		position.Z += speeds.X
+		position.X -= speeds.Y
+	}
+	if rl.IsKeyDown(rl.KeyD) {
+		position.Z -= speeds.X
+		position.X += speeds.Y
+	}
+
+	return position
 }

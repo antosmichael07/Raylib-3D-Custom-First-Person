@@ -21,7 +21,7 @@ func initCamera(player Player) rl.Camera3D {
 	return camera
 }
 
-func updateCamera(player *Player) {
+func updateCameraFirstPerson(player *Player) {
 	moveCamera(player)
 	rotateCamera(player)
 }
