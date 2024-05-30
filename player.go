@@ -34,7 +34,7 @@ func initPlayer() Player {
 	player.rotation = rl.NewVector2(0., 0.)
 	player.position = rl.NewVector3(4., .9, 4.)
 	player.scale = rl.NewVector3(.8, 1.8, .8)
-	player.crouch_scale = rl.NewVector2(1.,2.)
+	player.crouch_scale = rl.NewVector2(1., 2.)
 	player.camera = initCamera(player)
 
 	return player
@@ -81,12 +81,9 @@ func rotatePlayer(player *Player) {
 
 func checkCollisionsForPlayer(player Player, bounding_box rl.BoundingBox) bool {
 	player.position = getPlayerPositionAfterMoving(player)
-	
-	if rl.CheckCollisionBoxes(rl.NewBoundingBox(rl.NewVector3(player.position.X - player.scale.X / 2, player.position.Y - player.scale.Y / 2, player.position.Z - player.scale.Z / 2), 
-	rl.NewVector3(player.position.X + player.scale.X / 2, player.position.Y + player.scale.Y / 2, player.position.Z + player.scale.Z / 2)), bounding_box) {
-		return true
-	}
-	return false
+
+	return rl.CheckCollisionBoxes(rl.NewBoundingBox(rl.NewVector3(player.position.X-player.scale.X/2, player.position.Y-player.scale.Y/2, player.position.Z-player.scale.Z/2),
+		rl.NewVector3(player.position.X+player.scale.X/2, player.position.Y+player.scale.Y/2, player.position.Z+player.scale.Z/2)), bounding_box)
 }
 
 func getPlayerPositionAfterMoving(player Player) rl.Vector3 {
@@ -99,7 +96,20 @@ func getPlayerPositionAfterMoving(player Player) rl.Vector3 {
 	if player.is_crouching {
 		current_speed = player.sneak_speed
 	}
-	if rl.IsKeyDown(rl.KeyW) && rl.IsKeyDown(rl.KeyA) || rl.IsKeyDown(rl.KeyW) && rl.IsKeyDown(rl.KeyD) || rl.IsKeyDown(rl.KeyS) && rl.IsKeyDown(rl.KeyA) || rl.IsKeyDown(rl.KeyS) && rl.IsKeyDown(rl.KeyD) {
+	keys_pressed := 0
+	if rl.IsKeyDown(rl.KeyW) {
+		keys_pressed++
+	}
+	if rl.IsKeyDown(rl.KeyS) {
+		keys_pressed++
+	}
+	if rl.IsKeyDown(rl.KeyA) {
+		keys_pressed++
+	}
+	if rl.IsKeyDown(rl.KeyD) {
+		keys_pressed++
+	}
+	if keys_pressed == 2 {
 		current_speed = current_speed * .707
 	}
 
@@ -131,9 +141,5 @@ func getPlayerPositionAfterMoving(player Player) rl.Vector3 {
 func checkPlayerUncrouch(player Player, bounding_box rl.BoundingBox) bool {
 	player.scale.Y = player.crouch_scale.Y
 
-	if checkCollisionsForPlayer(player, bounding_box) {
-		return false
-	}
-
-	return true
+	return !checkCollisionsForPlayer(player, bounding_box)
 }
