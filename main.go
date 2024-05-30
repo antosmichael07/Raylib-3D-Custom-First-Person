@@ -19,11 +19,13 @@ func main() {
 	bounding_box := rl.NewBoundingBox(rl.NewVector3(-1., 1.5, -1.), rl.NewVector3(1., 3.5, 1.))
 
 	for !rl.WindowShouldClose() {
+		manageFPS(current_monitor)
+
 		updatePlayer(&player, bounding_box)
 
 		rl.BeginDrawing()
-		rl.ClearBackground(rl.Black)
 		{
+			rl.ClearBackground(rl.Black)
 			rl.DrawFPS(10, 10)
 		}
 
@@ -38,4 +40,12 @@ func main() {
 	}
 
 	rl.CloseWindow()
+}
+
+func manageFPS(monitor int) {
+	if rl.IsWindowFocused() {
+		rl.SetTargetFPS(int32(rl.GetMonitorRefreshRate(monitor)))
+	} else {
+		rl.SetTargetFPS(10)
+	}
 }
