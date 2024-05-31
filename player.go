@@ -2,7 +2,6 @@ package main
 
 import (
 	"math"
-	"fmt"
 
 	rl "github.com/gen2brain/raylib-go/raylib"
 )
@@ -32,10 +31,10 @@ type Player struct {
 func initPlayer() Player {
 	player := Player{}
 	player.speed = .1
-	player.sprint_speed = .2
+	player.sprint_speed = .15
 	player.sneak_speed = .05
 	player.current_speed = 0.
-	player.acceleration = .008
+	player.acceleration = .01
 	player.mouse_sensitivity = .0025
 	player.zoom_mouse_sensitivity = .0005
 	player.fov = 70.
@@ -89,19 +88,19 @@ func movePlayer(player *Player, bounding_boxes []rl.BoundingBox) {
 }
 
 func rotatePlayer(player *Player) {
-	if player.rotation.Y > 1.5 {
-		player.rotation.Y = 1.5
-	}
-	if player.rotation.Y < -1.5 {
-		player.rotation.Y = -1.5
-	}
-
 	if rl.IsKeyDown(rl.KeyC) {
 		player.rotation.X += rl.GetMouseDelta().X * player.zoom_mouse_sensitivity
 		player.rotation.Y -= rl.GetMouseDelta().Y * player.zoom_mouse_sensitivity
 	} else {
 		player.rotation.X += rl.GetMouseDelta().X * player.mouse_sensitivity
 		player.rotation.Y -= rl.GetMouseDelta().Y * player.mouse_sensitivity
+	}
+
+	if player.rotation.Y > 1.5 {
+		player.rotation.Y = 1.5
+	}
+	if player.rotation.Y < -1.5 {
+		player.rotation.Y = -1.5
 	}
 }
 
@@ -120,14 +119,11 @@ func checkCollisionsForPlayer(player Player, bounding_boxes []rl.BoundingBox) bo
 
 func getPlayerPositionAfterMoving(player Player) rl.Vector3 {
 	position := player.position
-	position.Y += player.y_velocity
+	position.Y += player.y_velocity * (rl.GetFrameTime() * 60)
 
 	current_speed := player.current_speed
-	if rl.IsKeyDown(rl.KeyLeftShift) {
-		current_speed = player.sprint_speed
-	}
-	if player.is_crouching {
-		current_speed = player.sneak_speed
+	if player.speed == 0 {
+		current_speed = player.speed
 	}
 	keys_pressed := 0
 	if rl.IsKeyDown(rl.KeyW) {
@@ -208,22 +204,27 @@ func checkIfPlayerOnSurface(player Player, bounding_boxes []rl.BoundingBox) bool
 }
 
 func accelerationPlayer(player *Player) {
-	if player.current_speed <= player.speed && (rl.IsKeyDown(rl.KeyW) || rl.IsKeyDown(rl.KeyS) || rl.IsKeyDown(rl.KeyA) || rl.IsKeyDown(rl.KeyD)) {
-		player.current_speed += player.acceleration * (rl.GetFrameTime() * 60) 
-	}
-	if rl.IsKeyDown(rl.KeyLeftShift) && player.current_speed <= player.sprint_speed && (rl.IsKeyDown(rl.KeyW) || rl.IsKeyDown(rl.KeyS) || rl.IsKeyDown(rl.KeyA) || rl.IsKeyDown(rl.KeyD)) {
-		player.current_speed += player.acceleration * (rl.GetFrameTime() * 60)
-	}
-	if rl.IsKeyDown(rl.KeyLeftControl) && player.current_speed <= player.sneak_speed && (rl.IsKeyDown(rl.KeyW) || rl.IsKeyDown(rl.KeyS) || rl.IsKeyDown(rl.KeyA) || rl.IsKeyDown(rl.KeyD)) {
-		player.current_speed += player.acceleration * (rl.GetFrameTime() * 60)
-	}
-
 	if !rl.IsKeyDown(rl.KeyW) && !rl.IsKeyDown(rl.KeyS) && !rl.IsKeyDown(rl.KeyA) && !rl.IsKeyDown(rl.KeyD) {
 		if player.current_speed > 0. {
 			player.current_speed -= player.acceleration * (rl.GetFrameTime() * 60)
 		} else {
 			player.current_speed = 0.
 		}
+	} else if !rl.IsKeyDown(rl.KeyLeftShift) && player.current_speed > player.speed {
+		player.current_speed -= player.acceleration * (rl.GetFrameTime() * 60)
+	}
+	if rl.IsKeyDown(rl.KeyLeftControl) && player.current_speed > player.sneak_speed {
+		player.current_speed -= player.acceleration * (rl.GetFrameTime() * 60)
+	}
+
+	if player.current_speed <= player.speed && (rl.IsKeyDown(rl.KeyW) || rl.IsKeyDown(rl.KeyS) || rl.IsKeyDown(rl.KeyA) || rl.IsKeyDown(rl.KeyD)) && !rl.IsKeyDown(rl.KeyLeftShift) && !rl.IsKeyDown(rl.KeyLeftControl) {
+		player.current_speed += player.acceleration * (rl.GetFrameTime() * 60)
+	}
+	if rl.IsKeyDown(rl.KeyLeftShift) && player.current_speed <= player.sprint_speed && (rl.IsKeyDown(rl.KeyW) || rl.IsKeyDown(rl.KeyS) || rl.IsKeyDown(rl.KeyA) || rl.IsKeyDown(rl.KeyD)) {
+		player.current_speed += player.acceleration * (rl.GetFrameTime() * 60)
+	}
+	if rl.IsKeyDown(rl.KeyLeftControl) && player.current_speed <= player.sneak_speed && (rl.IsKeyDown(rl.KeyW) || rl.IsKeyDown(rl.KeyS) || rl.IsKeyDown(rl.KeyA) || rl.IsKeyDown(rl.KeyD)) {
+		player.current_speed += player.acceleration * (rl.GetFrameTime() * 60)
 	}
 }
 
