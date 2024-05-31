@@ -45,8 +45,8 @@ func initPlayer() Player {
 	player.crouch_scale = rl.NewVector2(.9, 1.8)
 	player.is_crouching = false
 	player.y_velocity = 0.
-	player.gravity = .004
-	player.jump_power = .08
+	player.gravity = .0065
+	player.jump_power = .15
 	player.last_key_pressed = -1
 	player.camera = initCamera(player)
 
