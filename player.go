@@ -2,6 +2,7 @@ package main
 
 import (
 	"math"
+	"fmt"
 
 	rl "github.com/gen2brain/raylib-go/raylib"
 )
@@ -34,7 +35,7 @@ func initPlayer() Player {
 	player.sprint_speed = .2
 	player.sneak_speed = .05
 	player.current_speed = 0.
-	player.acceleration = .004
+	player.acceleration = .008
 	player.mouse_sensitivity = .0025
 	player.zoom_mouse_sensitivity = .0005
 	player.fov = 70.
@@ -45,8 +46,8 @@ func initPlayer() Player {
 	player.crouch_scale = rl.NewVector2(.9, 1.8)
 	player.is_crouching = false
 	player.y_velocity = 0.
-	player.gravity = .003
-	player.jump_power = .065
+	player.gravity = .004
+	player.jump_power = .08
 	player.last_key_pressed = -1
 	player.camera = initCamera(player)
 
@@ -186,7 +187,7 @@ func applyGravityToPlayer(player *Player, bounding_boxes []rl.BoundingBox) {
 	}
 
 	if checkCollisionsForPlayer(*player, bounding_boxes) {
-		player.position.Y += player.y_velocity
+		player.position.Y += player.y_velocity * (rl.GetFrameTime() * 60)
 	}
 }
 
@@ -208,17 +209,21 @@ func checkIfPlayerOnSurface(player Player, bounding_boxes []rl.BoundingBox) bool
 
 func accelerationPlayer(player *Player) {
 	if player.current_speed <= player.speed && (rl.IsKeyDown(rl.KeyW) || rl.IsKeyDown(rl.KeyS) || rl.IsKeyDown(rl.KeyA) || rl.IsKeyDown(rl.KeyD)) {
-		player.current_speed += player.acceleration
+		player.current_speed += player.acceleration * (rl.GetFrameTime() * 60) 
 	}
 	if rl.IsKeyDown(rl.KeyLeftShift) && player.current_speed <= player.sprint_speed && (rl.IsKeyDown(rl.KeyW) || rl.IsKeyDown(rl.KeyS) || rl.IsKeyDown(rl.KeyA) || rl.IsKeyDown(rl.KeyD)) {
-		player.current_speed += player.acceleration
+		player.current_speed += player.acceleration * (rl.GetFrameTime() * 60)
 	}
 	if rl.IsKeyDown(rl.KeyLeftControl) && player.current_speed <= player.sneak_speed && (rl.IsKeyDown(rl.KeyW) || rl.IsKeyDown(rl.KeyS) || rl.IsKeyDown(rl.KeyA) || rl.IsKeyDown(rl.KeyD)) {
-		player.current_speed += player.acceleration
+		player.current_speed += player.acceleration * (rl.GetFrameTime() * 60)
 	}
 
-	if !rl.IsKeyDown(rl.KeyW) && !rl.IsKeyDown(rl.KeyS) && !rl.IsKeyDown(rl.KeyA) && !rl.IsKeyDown(rl.KeyD) && player.current_speed > 0. {
-		player.current_speed -= player.acceleration
+	if !rl.IsKeyDown(rl.KeyW) && !rl.IsKeyDown(rl.KeyS) && !rl.IsKeyDown(rl.KeyA) && !rl.IsKeyDown(rl.KeyD) {
+		if player.current_speed > 0. {
+			player.current_speed -= player.acceleration * (rl.GetFrameTime() * 60)
+		} else {
+			player.current_speed = 0.
+		}
 	}
 }
 
