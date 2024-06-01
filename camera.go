@@ -6,41 +6,40 @@ import (
 	rl "github.com/gen2brain/raylib-go/raylib"
 )
 
-func initCamera(player Player) rl.Camera3D {
-	camera := rl.Camera3D{}
-	camera.Position = rl.NewVector3(player.position.X, player.position.Y+(player.scale.Y/2), player.position.Z)
-	camera.Target = rl.NewVector3(
+func (player *Player) initCamera() {
+	player.camera.Position = rl.NewVector3(player.position.X, player.position.Y+(player.scale.Y/2), player.position.Z)
+	player.camera.Target = rl.NewVector3(
 		player.camera.Position.X-float32(math.Cos(float64(player.rotation.X)))*float32(math.Cos(float64(player.rotation.Y))),
 		player.camera.Position.Y+float32(math.Sin(float64(player.rotation.Y)))+(player.scale.Y/2),
 		player.camera.Position.Z-float32(math.Sin(float64(player.rotation.X)))*float32(math.Cos(float64(player.rotation.Y))),
 	)
-	camera.Up = rl.NewVector3(0., 1., 0.)
-	camera.Fovy = player.fov
-	camera.Projection = rl.CameraPerspective
-
-	return camera
+	player.camera.Up = rl.NewVector3(0., 1., 0.)
+	player.camera.Fovy = player.fovs.normal
+	player.camera.Projection = rl.CameraPerspective
 }
 
-func updateCameraFirstPerson(player *Player) {
-	moveCamera(player)
-	rotateCamera(player)
-	zoomCamera(player)
+func (player *Player) updateCameraFirstPerson() {
+	player.moveCamera()
+	player.rotateCamera()
+	player.zoomCamera()
 }
 
-func moveCamera(player *Player) {
+func (player *Player) moveCamera() {
 	player.camera.Position = rl.NewVector3(player.position.X, player.position.Y+(player.scale.Y/2), player.position.Z)
 }
 
-func rotateCamera(player *Player) {
-	player.camera.Target.X = player.camera.Position.X - float32(math.Cos(float64(player.rotation.X)))*float32(math.Cos(float64(player.rotation.Y)))
+func (player *Player) rotateCamera() {
+	cos_rotation_y := float32(math.Cos(float64(player.rotation.Y)))
+
+	player.camera.Target.X = player.camera.Position.X - float32(math.Cos(float64(player.rotation.X)))*cos_rotation_y
 	player.camera.Target.Y = player.camera.Position.Y + float32(math.Sin(float64(player.rotation.Y)))
-	player.camera.Target.Z = player.camera.Position.Z - float32(math.Sin(float64(player.rotation.X)))*float32(math.Cos(float64(player.rotation.Y)))
+	player.camera.Target.Z = player.camera.Position.Z - float32(math.Sin(float64(player.rotation.X)))*cos_rotation_y
 }
 
-func zoomCamera(player *Player) {
+func (player *Player) zoomCamera() {
 	if rl.IsKeyDown(rl.KeyC) {
-		player.camera.Fovy = player.zoom_fov
+		player.camera.Fovy = player.fovs.zoom
 	} else {
-		player.camera.Fovy = player.fov
+		player.camera.Fovy = player.fovs.normal
 	}
 }

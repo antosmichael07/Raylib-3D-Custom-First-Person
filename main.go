@@ -14,7 +14,8 @@ func main() {
 	rl.DisableCursor()
 	rl.SetExitKey(-1)
 
-	player := initPlayer()
+	player := Player{}
+	player.initPlayer()
 
 	bounding_boxes := []rl.BoundingBox{
 		rl.NewBoundingBox(rl.NewVector3(-1., 1.5, -1.), rl.NewVector3(1., 3.5, 1.)),
@@ -25,7 +26,7 @@ func main() {
 	for !rl.WindowShouldClose() {
 		manageFPS(current_monitor)
 
-		updatePlayer(&player, bounding_boxes)
+		player.updatePlayer(bounding_boxes)
 
 		rl.BeginDrawing()
 		{
