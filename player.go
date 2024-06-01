@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"math"
 
 	rl "github.com/gen2brain/raylib-go/raylib"
@@ -80,7 +81,16 @@ func movePlayer(player *Player, bounding_boxes []rl.BoundingBox) {
 		player.y_velocity = player.jump_power
 	}
 
-	if checkCollisionsForPlayer(*player, bounding_boxes) {
+	player.position.Y += player.y_velocity * (rl.GetFrameTime() * 60)
+
+	collisions_x, collisions_z := checkCollisionsXZForPlayer(*player, bounding_boxes)
+	if collisions_x && collisions_z {
+		return
+	} else if collisions_x {
+		player.position.Z = getPlayerPositionAfterMoving(*player).Z
+		return
+	} else if collisions_z {
+		player.position.X = getPlayerPositionAfterMoving(*player).X
 		return
 	}
 
@@ -117,14 +127,37 @@ func checkCollisionsForPlayer(player Player, bounding_boxes []rl.BoundingBox) bo
 	return false
 }
 
-func getPlayerPositionAfterMoving(player Player) rl.Vector3 {
-	position := player.position
-	position.Y += player.y_velocity * (rl.GetFrameTime() * 60)
+func checkCollisionsXZForPlayer(player Player, bounding_boxes []rl.BoundingBox) (bool, bool) {
+	collision_x, collision_z := false, false
 
-	current_speed := player.current_speed
-	if player.speed == 0 {
-		current_speed = player.speed
+	player_position_x := getPlayerPositionAfterMoving(player).X
+
+	for _, box := range bounding_boxes {
+		if rl.CheckCollisionBoxes(rl.NewBoundingBox(rl.NewVector3(player_position_x-player.scale.X/2, player.position.Y-player.scale.Y/2, player.position.Z-player.scale.Z/2),
+			rl.NewVector3(player_position_x+player.scale.X/2, player.position.Y+player.scale.Y/2, player.position.Z+player.scale.Z/2)), box) {
+			collision_x = true
+		}
 	}
+
+	player_position_z := getPlayerPositionAfterMoving(player).Z
+
+	for _, box := range bounding_boxes {
+		if rl.CheckCollisionBoxes(rl.NewBoundingBox(rl.NewVector3(player.position.X-player.scale.X/2, player.position.Y-player.scale.Y/2, player_position_z-player.scale.Z/2),
+			rl.NewVector3(player.position.X+player.scale.X/2, player.position.Y+player.scale.Y/2, player_position_z+player.scale.Z/2)), box) {
+			collision_z = true
+		}
+	}
+
+	fmt.Printf("player_y: %f\n", player.position.Y)
+	return collision_x, collision_z
+}
+
+func getPlayerPositionAfterMoving(player Player) rl.Vector3 {
+	current_speed := player.current_speed
+	if player.speed == 0. {
+		player.position.Y += player.y_velocity * (rl.GetFrameTime() * 60)
+	}
+
 	keys_pressed := 0
 	if rl.IsKeyDown(rl.KeyW) {
 		keys_pressed++
@@ -148,23 +181,23 @@ func getPlayerPositionAfterMoving(player Player) rl.Vector3 {
 	)
 
 	if rl.IsKeyDown(rl.KeyW) || player.last_key_pressed == int32(rl.KeyW) {
-		position.X -= speeds.X
-		position.Z -= speeds.Y
+		player.position.X -= speeds.X
+		player.position.Z -= speeds.Y
 	}
 	if rl.IsKeyDown(rl.KeyS) || player.last_key_pressed == int32(rl.KeyS) {
-		position.X += speeds.X
-		position.Z += speeds.Y
+		player.position.X += speeds.X
+		player.position.Z += speeds.Y
 	}
 	if rl.IsKeyDown(rl.KeyA) || player.last_key_pressed == int32(rl.KeyA) {
-		position.Z += speeds.X
-		position.X -= speeds.Y
+		player.position.Z += speeds.X
+		player.position.X -= speeds.Y
 	}
 	if rl.IsKeyDown(rl.KeyD) || player.last_key_pressed == int32(rl.KeyD) {
-		position.Z -= speeds.X
-		position.X += speeds.Y
+		player.position.Z -= speeds.X
+		player.position.X += speeds.Y
 	}
 
-	return position
+	return player.position
 }
 
 func checkPlayerUncrouch(player Player, bounding_boxes []rl.BoundingBox) bool {
@@ -177,27 +210,24 @@ func checkPlayerUncrouch(player Player, bounding_boxes []rl.BoundingBox) bool {
 func applyGravityToPlayer(player *Player, bounding_boxes []rl.BoundingBox) {
 	player.y_velocity -= player.gravity * (rl.GetFrameTime() * 60)
 
-	if checkYCollisionsForPlayer(*player, bounding_boxes) || getPlayerPositionAfterMoving(*player).Y-(player.scale.Y/2) < 0. {
+	if checkCollisionsYForPlayer(*player, bounding_boxes) || getPlayerPositionAfterMoving(*player).Y-(player.scale.Y/2) < 0. {
 		player.y_velocity = 0.
 		return
 	}
-
-	if checkCollisionsForPlayer(*player, bounding_boxes) {
-		player.position.Y += player.y_velocity * (rl.GetFrameTime() * 60)
-	}
 }
 
-func checkYCollisionsForPlayer(player Player, bounding_boxes []rl.BoundingBox) bool {
+func checkCollisionsYForPlayer(player Player, bounding_boxes []rl.BoundingBox) bool {
 	player.speed = 0
 	player.sprint_speed = 0
 	player.sneak_speed = 0
+	player.current_speed = 0
 
 	return checkCollisionsForPlayer(player, bounding_boxes)
 }
 
 func checkIfPlayerOnSurface(player Player, bounding_boxes []rl.BoundingBox) bool {
 	player.position.Y -= player.gravity * (rl.GetFrameTime() * 60)
-	if checkCollisionsForPlayer(player, bounding_boxes) || player.position.Y-(player.scale.Y/2) < 0. {
+	if checkCollisionsYForPlayer(player, bounding_boxes) || player.position.Y-(player.scale.Y/2) < 0. {
 		return true
 	}
 	return false
