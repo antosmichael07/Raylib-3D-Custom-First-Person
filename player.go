@@ -45,6 +45,11 @@ type Scale struct {
 	crouch float32
 }
 
+type Vector2XZ struct {
+	X float32
+	Z float32
+}
+
 func (player *Player) initPlayer() {
 	player.speed.normal = .1
 	player.speed.sprint = .15
@@ -100,6 +105,7 @@ func (player *Player) movePlayer(bounding_boxes []rl.BoundingBox) {
 	player.position.Y += player.y_velocity * (rl.GetFrameTime() * 60)
 
 	player_position_after_moving := player.getPlayerPositionAfterMoving()
+
 	collisions_x, collisions_z := player.checkCollisionsXZForPlayer(bounding_boxes)
 	if collisions_x && collisions_z {
 		return
@@ -146,11 +152,11 @@ func (player Player) checkCollisionsForPlayer(bounding_boxes []rl.BoundingBox) b
 }
 
 func (player Player) checkCollisionsXZForPlayer(bounding_boxes []rl.BoundingBox) (bool, bool) {
+	player_position_after_moving := player.getPlayerPositionAfterMoving()
+
 	collision_x, collision_z := false, false
 
-	player_position_after_moving := player.getPlayerPositionAfterMoving()
 	player_position_x := player_position_after_moving.X
-
 	for _, box := range bounding_boxes {
 		if rl.CheckCollisionBoxes(rl.NewBoundingBox(rl.NewVector3(player_position_x-player.scale.X/2, player.position.Y-player.scale.Y/2, player.position.Z-player.scale.Z/2),
 			rl.NewVector3(player_position_x+player.scale.X/2, player.position.Y+player.scale.Y/2, player.position.Z+player.scale.Z/2)), box) {
@@ -159,7 +165,6 @@ func (player Player) checkCollisionsXZForPlayer(bounding_boxes []rl.BoundingBox)
 	}
 
 	player_position_z := player_position_after_moving.Z
-
 	for _, box := range bounding_boxes {
 		if rl.CheckCollisionBoxes(rl.NewBoundingBox(rl.NewVector3(player.position.X-player.scale.X/2, player.position.Y-player.scale.Y/2, player_position_z-player.scale.Z/2),
 			rl.NewVector3(player.position.X+player.scale.X/2, player.position.Y+player.scale.Y/2, player_position_z+player.scale.Z/2)), box) {
@@ -198,26 +203,26 @@ func (player Player) getPlayerPositionAfterMoving() rl.Vector3 {
 
 	final_speed := current_speed * frame_time
 
-	speeds := rl.NewVector2(
-		float32(math.Cos(float64(player.rotation.X)))*final_speed,
-		float32(math.Sin(float64(player.rotation.X)))*final_speed,
-	)
+	speeds := Vector2XZ{
+		float32(math.Cos(float64(player.rotation.X))) * final_speed,
+		float32(math.Sin(float64(player.rotation.X))) * final_speed,
+	}
 
 	if rl.IsKeyDown(rl.KeyW) || player.last_key_pressed == int32(rl.KeyW) {
 		player.position.X -= speeds.X
-		player.position.Z -= speeds.Y
+		player.position.Z -= speeds.Z
 	}
 	if rl.IsKeyDown(rl.KeyS) || player.last_key_pressed == int32(rl.KeyS) {
 		player.position.X += speeds.X
-		player.position.Z += speeds.Y
+		player.position.Z += speeds.Z
 	}
 	if rl.IsKeyDown(rl.KeyA) || player.last_key_pressed == int32(rl.KeyA) {
 		player.position.Z += speeds.X
-		player.position.X -= speeds.Y
+		player.position.X -= speeds.Z
 	}
 	if rl.IsKeyDown(rl.KeyD) || player.last_key_pressed == int32(rl.KeyD) {
 		player.position.Z -= speeds.X
-		player.position.X += speeds.Y
+		player.position.X += speeds.Z
 	}
 
 	return player.position
@@ -258,8 +263,8 @@ func (player Player) checkIfPlayerOnSurface(bounding_boxes []rl.BoundingBox) boo
 
 func (player *Player) accelerationPlayer() {
 	final_speed := player.speed.acceleration * rl.GetFrameTime() * 60
-	keys_down := map[string]bool{"shift": rl.IsKeyDown(rl.KeyLeftShift), "ctrl": rl.IsKeyDown(rl.KeyLeftControl), "w": rl.IsKeyDown(rl.KeyW), "s": rl.IsKeyDown(rl.KeyS), "a": rl.IsKeyDown(rl.KeyA), "d": rl.IsKeyDown(rl.KeyD)}
 
+	keys_down := map[string]bool{"shift": rl.IsKeyDown(rl.KeyLeftShift), "ctrl": rl.IsKeyDown(rl.KeyLeftControl), "w": rl.IsKeyDown(rl.KeyW), "s": rl.IsKeyDown(rl.KeyS), "a": rl.IsKeyDown(rl.KeyA), "d": rl.IsKeyDown(rl.KeyD)}
 	if !keys_down["w"] && !keys_down["s"] && !keys_down["a"] && !keys_down["d"] {
 		if player.speed.current > 0. {
 			player.speed.current -= final_speed
