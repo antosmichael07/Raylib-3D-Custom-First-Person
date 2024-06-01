@@ -118,7 +118,7 @@ func (player *Player) movePlayer(bounding_boxes []rl.BoundingBox) {
 		}
 		player.IsCrouching = false
 	}
-	if rl.IsKeyDown(player.Controls.Jump) && player.YVelocity == 0. && player.checkIfPlayerOnSurface(bounding_boxes) {
+	if rl.IsKeyDown(player.Controls.Jump) && player.YVelocity == 0. && player.checkIfPlayerOnSurface(bounding_boxes) && !player.IsCrouching {
 		player.YVelocity = player.JumpPower
 	}
 
