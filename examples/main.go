@@ -1,6 +1,7 @@
 package main
 
 import (
+	rl_fp "github.com/antosmichael07/Raylib-3D-Custom-First-Person/rl_first_person"
 	rl "github.com/gen2brain/raylib-go/raylib"
 )
 
@@ -14,7 +15,7 @@ func main() {
 	rl.DisableCursor()
 	rl.SetExitKey(-1)
 
-	player := Player{}
+	player := rl_fp.Player{}
 	player.initPlayer()
 
 	bounding_boxes := []rl.BoundingBox{
