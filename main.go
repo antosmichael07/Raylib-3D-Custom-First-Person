@@ -33,7 +33,7 @@ func main() {
 			rl.ClearBackground(rl.Black)
 			rl.DrawFPS(10, 10)
 
-			rl.DrawRectangle(int32(rl.GetScreenWidth())/2-5, int32(rl.GetScreenHeight())/2-5, 10, 10, rl.Fade(rl.White, .5))
+			rl.DrawRectangle(int32(rl.GetScreenWidth())/2-4, int32(rl.GetScreenHeight())/2-4, 8, 8, rl.Fade(rl.White, .5))
 		}
 
 		rl.BeginMode3D(player.Camera)
