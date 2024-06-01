@@ -102,6 +102,49 @@ func (player *Player) updatePlayer(bounding_boxes []rl.BoundingBox) {
 	player.updateCameraFirstPerson()
 }
 
+func (player *Player) lastKeyPressedPlayer() {
+	if rl.IsKeyDown(player.Controls.Forward) {
+		player.LastKeyPressed = int32(player.Controls.Forward)
+	}
+	if rl.IsKeyDown(player.Controls.Backward) {
+		player.LastKeyPressed = int32(player.Controls.Backward)
+	}
+	if rl.IsKeyDown(player.Controls.Left) {
+		player.LastKeyPressed = int32(player.Controls.Left)
+	}
+	if rl.IsKeyDown(player.Controls.Right) {
+		player.LastKeyPressed = int32(player.Controls.Right)
+	}
+}
+
+func (player *Player) accelerationPlayer() {
+	final_speed := player.Speed.Acceleration * rl.GetFrameTime() * 60
+
+	keys_down := map[string]bool{"shift": rl.IsKeyDown(player.Controls.Sprint), "ctrl": rl.IsKeyDown(player.Controls.Crouch), "w": rl.IsKeyDown(player.Controls.Forward), "s": rl.IsKeyDown(player.Controls.Backward), "a": rl.IsKeyDown(player.Controls.Left), "d": rl.IsKeyDown(player.Controls.Right)}
+	if !keys_down["w"] && !keys_down["s"] && !keys_down["a"] && !keys_down["d"] {
+		if player.Speed.Current > 0. {
+			player.Speed.Current -= final_speed
+		} else {
+			player.Speed.Current = 0.
+		}
+	} else if !keys_down["shift"] && player.Speed.Current > player.Speed.Normal {
+		player.Speed.Current -= final_speed
+	}
+	if player.IsCrouching && player.Speed.Current > player.Speed.Sneak {
+		player.Speed.Current -= final_speed
+	}
+
+	if player.Speed.Current <= player.Speed.Normal && (keys_down["w"] || keys_down["s"] || keys_down["a"] || keys_down["d"]) && !keys_down["shift"] && !keys_down["ctrl"] {
+		player.Speed.Current += final_speed
+	}
+	if keys_down["shift"] && player.Speed.Current <= player.Speed.Sprint && (keys_down["w"] || keys_down["s"] || keys_down["a"] || keys_down["d"]) {
+		player.Speed.Current += final_speed
+	}
+	if keys_down["ctrl"] && player.Speed.Current <= player.Speed.Sneak && (keys_down["w"] || keys_down["s"] || keys_down["a"] || keys_down["d"]) {
+		player.Speed.Current += final_speed
+	}
+}
+
 func (player *Player) movePlayer(bounding_boxes []rl.BoundingBox) {
 	half_crouch_scale := player.ConstScale.Crouch / 2
 
@@ -158,6 +201,15 @@ func (player *Player) rotatePlayer() {
 	}
 }
 
+func (player *Player) applyGravityToPlayer(bounding_boxes []rl.BoundingBox) {
+	player.YVelocity -= player.Gravity * (rl.GetFrameTime() * 60)
+
+	if player.checkCollisionsYForPlayer(bounding_boxes) || player.getPlayerPositionAfterMoving().Y-(player.Scale.Y/2) < 0. {
+		player.YVelocity = 0.
+		return
+	}
+}
+
 func (player Player) checkCollisionsForPlayer(bounding_boxes []rl.BoundingBox) bool {
 	player.Position = player.getPlayerPositionAfterMoving()
 
@@ -169,6 +221,15 @@ func (player Player) checkCollisionsForPlayer(bounding_boxes []rl.BoundingBox) b
 	}
 
 	return false
+}
+
+func (player Player) checkCollisionsYForPlayer(bounding_boxes []rl.BoundingBox) bool {
+	player.Speed.Normal = 0
+	player.Speed.Sprint = 0
+	player.Speed.Sneak = 0
+	player.Speed.Current = 0
+
+	return player.checkCollisionsForPlayer(bounding_boxes)
 }
 
 func (player Player) checkCollisionsXZForPlayer(bounding_boxes []rl.BoundingBox) (bool, bool) {
@@ -255,71 +316,10 @@ func (player Player) checkPlayerUncrouch(bounding_boxes []rl.BoundingBox) bool {
 	return !player.checkCollisionsForPlayer(bounding_boxes)
 }
 
-func (player *Player) applyGravityToPlayer(bounding_boxes []rl.BoundingBox) {
-	player.YVelocity -= player.Gravity * (rl.GetFrameTime() * 60)
-
-	if player.checkCollisionsYForPlayer(bounding_boxes) || player.getPlayerPositionAfterMoving().Y-(player.Scale.Y/2) < 0. {
-		player.YVelocity = 0.
-		return
-	}
-}
-
-func (player Player) checkCollisionsYForPlayer(bounding_boxes []rl.BoundingBox) bool {
-	player.Speed.Normal = 0
-	player.Speed.Sprint = 0
-	player.Speed.Sneak = 0
-	player.Speed.Current = 0
-
-	return player.checkCollisionsForPlayer(bounding_boxes)
-}
-
 func (player Player) checkIfPlayerOnSurface(bounding_boxes []rl.BoundingBox) bool {
 	player.Position.Y -= player.Gravity * (rl.GetFrameTime() * 60)
 	if player.checkCollisionsYForPlayer(bounding_boxes) || player.Position.Y-(player.Scale.Y/2) < 0. {
 		return true
 	}
 	return false
-}
-
-func (player *Player) accelerationPlayer() {
-	final_speed := player.Speed.Acceleration * rl.GetFrameTime() * 60
-
-	keys_down := map[string]bool{"shift": rl.IsKeyDown(player.Controls.Sprint), "ctrl": rl.IsKeyDown(player.Controls.Crouch), "w": rl.IsKeyDown(player.Controls.Forward), "s": rl.IsKeyDown(player.Controls.Backward), "a": rl.IsKeyDown(player.Controls.Left), "d": rl.IsKeyDown(player.Controls.Right)}
-	if !keys_down["w"] && !keys_down["s"] && !keys_down["a"] && !keys_down["d"] {
-		if player.Speed.Current > 0. {
-			player.Speed.Current -= final_speed
-		} else {
-			player.Speed.Current = 0.
-		}
-	} else if !keys_down["shift"] && player.Speed.Current > player.Speed.Normal {
-		player.Speed.Current -= final_speed
-	}
-	if player.IsCrouching && player.Speed.Current > player.Speed.Sneak {
-		player.Speed.Current -= final_speed
-	}
-
-	if player.Speed.Current <= player.Speed.Normal && (keys_down["w"] || keys_down["s"] || keys_down["a"] || keys_down["d"]) && !keys_down["shift"] && !keys_down["ctrl"] {
-		player.Speed.Current += final_speed
-	}
-	if keys_down["shift"] && player.Speed.Current <= player.Speed.Sprint && (keys_down["w"] || keys_down["s"] || keys_down["a"] || keys_down["d"]) {
-		player.Speed.Current += final_speed
-	}
-	if keys_down["ctrl"] && player.Speed.Current <= player.Speed.Sneak && (keys_down["w"] || keys_down["s"] || keys_down["a"] || keys_down["d"]) {
-		player.Speed.Current += final_speed
-	}
-}
-
-func (player *Player) lastKeyPressedPlayer() {
-	if rl.IsKeyDown(player.Controls.Forward) {
-		player.LastKeyPressed = int32(player.Controls.Forward)
-	}
-	if rl.IsKeyDown(player.Controls.Backward) {
-		player.LastKeyPressed = int32(player.Controls.Backward)
-	}
-	if rl.IsKeyDown(player.Controls.Left) {
-		player.LastKeyPressed = int32(player.Controls.Left)
-	}
-	if rl.IsKeyDown(player.Controls.Right) {
-		player.LastKeyPressed = int32(player.Controls.Right)
-	}
 }
