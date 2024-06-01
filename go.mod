@@ -1,4 +1,4 @@
-module github.com/antosmichael07/Raylib-3D-Custom-First-Person/rl_first_person
+module github.com/antosmichael07/Raylib-3D-Custom-First-Person
 
 go 1.22.2
 
