@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"math"
 
 	rl "github.com/gen2brain/raylib-go/raylib"
@@ -148,7 +147,6 @@ func checkCollisionsXZForPlayer(player Player, bounding_boxes []rl.BoundingBox) 
 		}
 	}
 
-	fmt.Printf("player_y: %f\n", player.position.Y)
 	return collision_x, collision_z
 }
 
