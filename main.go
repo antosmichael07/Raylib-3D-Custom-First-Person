@@ -26,6 +26,10 @@ func main() {
 	for !rl.WindowShouldClose() {
 		manageFPS(current_monitor)
 
+		if rl.IsKeyPressed(rl.KeyEscape) {
+			rl.MinimizeWindow()
+		}
+
 		player.updatePlayer(bounding_boxes)
 
 		rl.BeginDrawing()
