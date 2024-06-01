@@ -1,4 +1,4 @@
-package rl_first_person
+package rl_fp
 
 import (
 	"math"
