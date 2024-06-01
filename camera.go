@@ -7,15 +7,15 @@ import (
 )
 
 func (player *Player) initCamera() {
-	player.camera.Position = rl.NewVector3(player.position.X, player.position.Y+(player.scale.Y/2), player.position.Z)
-	player.camera.Target = rl.NewVector3(
-		player.camera.Position.X-float32(math.Cos(float64(player.rotation.X)))*float32(math.Cos(float64(player.rotation.Y))),
-		player.camera.Position.Y+float32(math.Sin(float64(player.rotation.Y)))+(player.scale.Y/2),
-		player.camera.Position.Z-float32(math.Sin(float64(player.rotation.X)))*float32(math.Cos(float64(player.rotation.Y))),
+	player.Camera.Position = rl.NewVector3(player.Position.X, player.Position.Y+(player.Scale.Y/2), player.Position.Z)
+	player.Camera.Target = rl.NewVector3(
+		player.Camera.Position.X-float32(math.Cos(float64(player.Rotation.X)))*float32(math.Cos(float64(player.Rotation.Y))),
+		player.Camera.Position.Y+float32(math.Sin(float64(player.Rotation.Y)))+(player.Scale.Y/2),
+		player.Camera.Position.Z-float32(math.Sin(float64(player.Rotation.X)))*float32(math.Cos(float64(player.Rotation.Y))),
 	)
-	player.camera.Up = rl.NewVector3(0., 1., 0.)
-	player.camera.Fovy = player.fovs.normal
-	player.camera.Projection = rl.CameraPerspective
+	player.Camera.Up = rl.NewVector3(0., 1., 0.)
+	player.Camera.Fovy = player.Fovs.Normal
+	player.Camera.Projection = rl.CameraPerspective
 }
 
 func (player *Player) updateCameraFirstPerson() {
@@ -25,21 +25,21 @@ func (player *Player) updateCameraFirstPerson() {
 }
 
 func (player *Player) moveCamera() {
-	player.camera.Position = rl.NewVector3(player.position.X, player.position.Y+(player.scale.Y/2), player.position.Z)
+	player.Camera.Position = rl.NewVector3(player.Position.X, player.Position.Y+(player.Scale.Y/2), player.Position.Z)
 }
 
 func (player *Player) rotateCamera() {
-	cos_rotation_y := float32(math.Cos(float64(player.rotation.Y)))
+	cos_rotation_y := float32(math.Cos(float64(player.Rotation.Y)))
 
-	player.camera.Target.X = player.camera.Position.X - float32(math.Cos(float64(player.rotation.X)))*cos_rotation_y
-	player.camera.Target.Y = player.camera.Position.Y + float32(math.Sin(float64(player.rotation.Y)))
-	player.camera.Target.Z = player.camera.Position.Z - float32(math.Sin(float64(player.rotation.X)))*cos_rotation_y
+	player.Camera.Target.X = player.Camera.Position.X - float32(math.Cos(float64(player.Rotation.X)))*cos_rotation_y
+	player.Camera.Target.Y = player.Camera.Position.Y + float32(math.Sin(float64(player.Rotation.Y)))
+	player.Camera.Target.Z = player.Camera.Position.Z - float32(math.Sin(float64(player.Rotation.X)))*cos_rotation_y
 }
 
 func (player *Player) zoomCamera() {
-	if rl.IsKeyDown(rl.KeyC) {
-		player.camera.Fovy = player.fovs.zoom
+	if rl.IsKeyDown(player.Controls.Zoom) {
+		player.Camera.Fovy = player.Fovs.Zoom
 	} else {
-		player.camera.Fovy = player.fovs.normal
+		player.Camera.Fovy = player.Fovs.Normal
 	}
 }

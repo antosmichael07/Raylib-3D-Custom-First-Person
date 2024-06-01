@@ -36,7 +36,7 @@ func main() {
 			rl.DrawRectangle(int32(rl.GetScreenWidth())/2-5, int32(rl.GetScreenHeight())/2-5, 10, 10, rl.Fade(rl.White, .5))
 		}
 
-		rl.BeginMode3D(player.camera)
+		rl.BeginMode3D(player.Camera)
 		{
 			showBoundingBoxes(bounding_boxes, rl.Red)
 
