@@ -62,7 +62,7 @@ type Controls struct {
 	Zoom     int32
 }
 
-func (player *Player) initPlayer() {
+func (player *Player) InitPlayer() {
 	player.Speed.Normal = .1
 	player.Speed.Sprint = .15
 	player.Speed.Sneak = .05
@@ -90,19 +90,19 @@ func (player *Player) initPlayer() {
 	player.Controls.Crouch = int32(rl.KeyLeftControl)
 	player.Controls.Sprint = int32(rl.KeyLeftShift)
 	player.Controls.Zoom = int32(rl.KeyC)
-	player.initCamera()
+	player.InitCamera()
 }
 
-func (player *Player) updatePlayer(bounding_boxes []rl.BoundingBox) {
-	player.lastKeyPressedPlayer()
-	player.accelerationPlayer()
-	player.movePlayer(bounding_boxes)
-	player.rotatePlayer()
-	player.applyGravityToPlayer(bounding_boxes)
+func (player *Player) UpdatePlayer(bounding_boxes []rl.BoundingBox) {
+	player.LastKeyPressedPlayer()
+	player.AccelerationPlayer()
+	player.MovePlayer(bounding_boxes)
+	player.RotatePlayer()
+	player.ApplyGravityToPlayer(bounding_boxes)
 	player.updateCameraFirstPerson()
 }
 
-func (player *Player) lastKeyPressedPlayer() {
+func (player *Player) LastKeyPressedPlayer() {
 	if rl.IsKeyDown(player.Controls.Forward) {
 		player.LastKeyPressed = int32(player.Controls.Forward)
 	}
@@ -117,7 +117,7 @@ func (player *Player) lastKeyPressedPlayer() {
 	}
 }
 
-func (player *Player) accelerationPlayer() {
+func (player *Player) AccelerationPlayer() {
 	final_speed := player.Speed.Acceleration * rl.GetFrameTime() * 60
 
 	keys_down := map[string]bool{"shift": rl.IsKeyDown(player.Controls.Sprint), "ctrl": rl.IsKeyDown(player.Controls.Crouch), "w": rl.IsKeyDown(player.Controls.Forward), "s": rl.IsKeyDown(player.Controls.Backward), "a": rl.IsKeyDown(player.Controls.Left), "d": rl.IsKeyDown(player.Controls.Right)}
@@ -145,7 +145,7 @@ func (player *Player) accelerationPlayer() {
 	}
 }
 
-func (player *Player) movePlayer(bounding_boxes []rl.BoundingBox) {
+func (player *Player) MovePlayer(bounding_boxes []rl.BoundingBox) {
 	half_crouch_scale := player.ConstScale.Crouch / 2
 
 	if rl.IsKeyDown(player.Controls.Crouch) {
@@ -154,22 +154,22 @@ func (player *Player) movePlayer(bounding_boxes []rl.BoundingBox) {
 			player.Position.Y -= half_crouch_scale
 		}
 		player.IsCrouching = true
-	} else if player.checkPlayerUncrouch(bounding_boxes) {
+	} else if player.CheckPlayerUncrouch(bounding_boxes) {
 		player.Scale.Y = player.ConstScale.Normal
 		if player.IsCrouching {
 			player.Position.Y += half_crouch_scale
 		}
 		player.IsCrouching = false
 	}
-	if rl.IsKeyDown(player.Controls.Jump) && player.YVelocity == 0. && player.checkIfPlayerOnSurface(bounding_boxes) && !player.IsCrouching {
+	if rl.IsKeyDown(player.Controls.Jump) && player.YVelocity == 0. && player.CheckIfPlayerOnSurface(bounding_boxes) && !player.IsCrouching {
 		player.YVelocity = player.JumpPower
 	}
 
 	player.Position.Y += player.YVelocity * (rl.GetFrameTime() * 60)
 
-	player_position_after_moving := player.getPlayerPositionAfterMoving()
+	player_position_after_moving := player.GetPlayerPositionAfterMoving()
 
-	collisions_x, collisions_z := player.checkCollisionsXZForPlayer(bounding_boxes)
+	collisions_x, collisions_z := player.CheckCollisionsXZForPlayer(bounding_boxes)
 	if collisions_x && collisions_z {
 		return
 	} else if collisions_x {
@@ -183,7 +183,7 @@ func (player *Player) movePlayer(bounding_boxes []rl.BoundingBox) {
 	player.Position = player_position_after_moving
 }
 
-func (player *Player) rotatePlayer() {
+func (player *Player) RotatePlayer() {
 	mouse_delta := rl.GetMouseDelta()
 	if rl.IsKeyDown(player.Controls.Zoom) {
 		player.Rotation.X += mouse_delta.X * player.Mouse_sensitivity.Zoom
@@ -201,17 +201,17 @@ func (player *Player) rotatePlayer() {
 	}
 }
 
-func (player *Player) applyGravityToPlayer(bounding_boxes []rl.BoundingBox) {
+func (player *Player) ApplyGravityToPlayer(bounding_boxes []rl.BoundingBox) {
 	player.YVelocity -= player.Gravity * (rl.GetFrameTime() * 60)
 
-	if player.checkCollisionsYForPlayer(bounding_boxes) || player.getPlayerPositionAfterMoving().Y-(player.Scale.Y/2) < 0. {
+	if player.CheckCollisionsYForPlayer(bounding_boxes) || player.GetPlayerPositionAfterMoving().Y-(player.Scale.Y/2) < 0. {
 		player.YVelocity = 0.
 		return
 	}
 }
 
-func (player Player) checkCollisionsForPlayer(bounding_boxes []rl.BoundingBox) bool {
-	player.Position = player.getPlayerPositionAfterMoving()
+func (player Player) CheckCollisionsForPlayer(bounding_boxes []rl.BoundingBox) bool {
+	player.Position = player.GetPlayerPositionAfterMoving()
 
 	for _, box := range bounding_boxes {
 		if rl.CheckCollisionBoxes(rl.NewBoundingBox(rl.NewVector3(player.Position.X-player.Scale.X/2, player.Position.Y-player.Scale.Y/2, player.Position.Z-player.Scale.Z/2),
@@ -223,17 +223,17 @@ func (player Player) checkCollisionsForPlayer(bounding_boxes []rl.BoundingBox) b
 	return false
 }
 
-func (player Player) checkCollisionsYForPlayer(bounding_boxes []rl.BoundingBox) bool {
+func (player Player) CheckCollisionsYForPlayer(bounding_boxes []rl.BoundingBox) bool {
 	player.Speed.Normal = 0
 	player.Speed.Sprint = 0
 	player.Speed.Sneak = 0
 	player.Speed.Current = 0
 
-	return player.checkCollisionsForPlayer(bounding_boxes)
+	return player.CheckCollisionsForPlayer(bounding_boxes)
 }
 
-func (player Player) checkCollisionsXZForPlayer(bounding_boxes []rl.BoundingBox) (bool, bool) {
-	player_position_after_moving := player.getPlayerPositionAfterMoving()
+func (player Player) CheckCollisionsXZForPlayer(bounding_boxes []rl.BoundingBox) (bool, bool) {
+	player_position_after_moving := player.GetPlayerPositionAfterMoving()
 
 	collision_x, collision_z := false, false
 
@@ -256,7 +256,7 @@ func (player Player) checkCollisionsXZForPlayer(bounding_boxes []rl.BoundingBox)
 	return collision_x, collision_z
 }
 
-func (player Player) getPlayerPositionAfterMoving() rl.Vector3 {
+func (player Player) GetPlayerPositionAfterMoving() rl.Vector3 {
 	frame_time := rl.GetFrameTime() * 60
 
 	current_speed := player.Speed.Current
@@ -309,22 +309,22 @@ func (player Player) getPlayerPositionAfterMoving() rl.Vector3 {
 	return player.Position
 }
 
-func (player Player) checkPlayerUncrouch(bounding_boxes []rl.BoundingBox) bool {
+func (player Player) CheckPlayerUncrouch(bounding_boxes []rl.BoundingBox) bool {
 	player.Scale.Y = player.ConstScale.Normal
 	player.Position.Y += player.ConstScale.Normal / 2
 
-	return !player.checkCollisionsForPlayer(bounding_boxes)
+	return !player.CheckCollisionsForPlayer(bounding_boxes)
 }
 
-func (player Player) checkIfPlayerOnSurface(bounding_boxes []rl.BoundingBox) bool {
+func (player Player) CheckIfPlayerOnSurface(bounding_boxes []rl.BoundingBox) bool {
 	player.Position.Y -= player.Gravity * (rl.GetFrameTime() * 60)
-	if player.checkCollisionsYForPlayer(bounding_boxes) || player.Position.Y-(player.Scale.Y/2) < 0. {
+	if player.CheckCollisionsYForPlayer(bounding_boxes) || player.Position.Y-(player.Scale.Y/2) < 0. {
 		return true
 	}
 	return false
 }
 
-func (player *Player) initCamera() {
+func (player *Player) InitCamera() {
 	player.Camera.Position = rl.NewVector3(player.Position.X, player.Position.Y+(player.Scale.Y/2), player.Position.Z)
 	player.Camera.Target = rl.NewVector3(
 		player.Camera.Position.X-float32(math.Cos(float64(player.Rotation.X)))*float32(math.Cos(float64(player.Rotation.Y))),
@@ -337,16 +337,16 @@ func (player *Player) initCamera() {
 }
 
 func (player *Player) updateCameraFirstPerson() {
-	player.moveCamera()
-	player.rotateCamera()
-	player.zoomCamera()
+	player.MoveCamera()
+	player.RotateCamera()
+	player.ZoomCamera()
 }
 
-func (player *Player) moveCamera() {
+func (player *Player) MoveCamera() {
 	player.Camera.Position = rl.NewVector3(player.Position.X, player.Position.Y+(player.Scale.Y/2), player.Position.Z)
 }
 
-func (player *Player) rotateCamera() {
+func (player *Player) RotateCamera() {
 	cos_rotation_y := float32(math.Cos(float64(player.Rotation.Y)))
 
 	player.Camera.Target.X = player.Camera.Position.X - float32(math.Cos(float64(player.Rotation.X)))*cos_rotation_y
@@ -354,7 +354,7 @@ func (player *Player) rotateCamera() {
 	player.Camera.Target.Z = player.Camera.Position.Z - float32(math.Sin(float64(player.Rotation.X)))*cos_rotation_y
 }
 
-func (player *Player) zoomCamera() {
+func (player *Player) ZoomCamera() {
 	if rl.IsKeyDown(player.Controls.Zoom) {
 		player.Camera.Fovy = player.Fovs.Zoom
 	} else {
