@@ -1,4 +1,4 @@
-package rl_fp
+package main
 
 import (
 	"math"
@@ -73,9 +73,10 @@ type TriggerBox struct {
 }
 
 type InteractableBox struct {
-	BoundingBox rl.BoundingBox
-	Interacted  bool
-	Interacting bool
+	BoundingBox  rl.BoundingBox
+	Interacted   bool
+	Interacting  bool
+	RayCollision rl.RayCollision
 }
 
 func (player *Player) InitPlayer() {
@@ -120,7 +121,7 @@ func (player *Player) UpdatePlayer(bounding_boxes []rl.BoundingBox, trigger_boxe
 		player.MovePlayer(bounding_boxes)
 		player.CheckTriggerBoxes(trigger_boxes)
 	}
-	player.CheckInteractableBoxes(interactable_boxes)
+	player.UpdateInteractableBoxes(interactable_boxes)
 	player.RotatePlayer()
 	player.ApplyGravityToPlayer(bounding_boxes)
 	player.updateCameraFirstPerson()
@@ -406,15 +407,29 @@ func NewTriggerBox(box rl.BoundingBox) TriggerBox {
 	return TriggerBox{box, false, false}
 }
 
+func (player *Player) UpdateInteractableBoxes(interactable_boxes []InteractableBox) {
+	for i := range interactable_boxes {
+		interactable_boxes[i].RayCollision = rl.GetRayCollisionBox(rl.GetMouseRay(rl.NewVector2(float32(rl.GetMonitorWidth(rl.GetCurrentMonitor()))/2, float32(rl.GetMonitorHeight(rl.GetCurrentMonitor()))/2), player.Camera), interactable_boxes[i].BoundingBox)
+	}
+	player.CheckInteractableBoxes(interactable_boxes)
+	player.DrawInteractIndicator(interactable_boxes)
+}
+
+func (player Player) DrawInteractIndicator(interactable_boxes []InteractableBox) {
+	for i := range interactable_boxes {
+		if interactable_boxes[i].RayCollision.Hit && interactable_boxes[i].RayCollision.Distance <= player.InteractRange {
+			rl.DrawText("Press interact button", int32(rl.GetScreenWidth()/2)-rl.MeasureText("Press interact button", 30)/2, int32(rl.GetScreenHeight()/2)-30, 30, rl.White)
+		}
+	}
+}
+
 func (player *Player) CheckInteractableBoxes(interactable_boxes []InteractableBox) {
 	for i := range interactable_boxes {
-		ray_collision := rl.GetRayCollisionBox(rl.GetMouseRay(rl.NewVector2(float32(rl.GetMonitorWidth(rl.GetCurrentMonitor()))/2, float32(rl.GetMonitorHeight(rl.GetCurrentMonitor()))/2), player.Camera), interactable_boxes[i].BoundingBox)
-
 		if player.AlreadyInteracted {
 			interactable_boxes[i].Interacted = false
 		}
-		if rl.IsKeyDown(player.Controls.Interact) && (!player.AlreadyInteracted || ray_collision.Distance > player.InteractRange) {
-			if ray_collision.Hit && ray_collision.Distance <= player.InteractRange {
+		if rl.IsKeyDown(player.Controls.Interact) && (!player.AlreadyInteracted || interactable_boxes[i].RayCollision.Distance > player.InteractRange) {
+			if interactable_boxes[i].RayCollision.Hit && interactable_boxes[i].RayCollision.Distance <= player.InteractRange {
 				player.AlreadyInteracted = true
 				if !interactable_boxes[i].Interacting {
 					interactable_boxes[i].Interacted = true
@@ -440,5 +455,5 @@ func (player *Player) CheckInteractableBoxes(interactable_boxes []InteractableBo
 }
 
 func NewInteractableBox(box rl.BoundingBox) InteractableBox {
-	return InteractableBox{box, false, false}
+	return InteractableBox{box, false, false, rl.NewRayCollision(false, 0., rl.NewVector3(0., 0., 0.), rl.NewVector3(0., 0., 0.))}
 }
