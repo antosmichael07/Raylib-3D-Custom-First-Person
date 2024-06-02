@@ -19,6 +19,8 @@ type Player struct {
 	Gravity           float32
 	JumpPower         float32
 	LastKeyPressed    int32
+	FrameTime         float32
+	InteractRange     float32
 	Controls          Controls
 	Camera            rl.Camera3D
 }
@@ -60,6 +62,19 @@ type Controls struct {
 	Crouch   int32
 	Sprint   int32
 	Zoom     int32
+	Interact int32
+}
+
+type TriggerBox struct {
+	BoundingBox rl.BoundingBox
+	Triggered   bool
+	Triggering  bool
+}
+
+type InteractableBox struct {
+	BoundingBox rl.BoundingBox
+	Interacted  bool
+	Interacting bool
 }
 
 func (player *Player) InitPlayer() {
@@ -82,6 +97,8 @@ func (player *Player) InitPlayer() {
 	player.Gravity = .0065
 	player.JumpPower = .15
 	player.LastKeyPressed = -1
+	player.FrameTime = 0.
+	player.InteractRange = 2.
 	player.Controls.Forward = int32(rl.KeyW)
 	player.Controls.Backward = int32(rl.KeyS)
 	player.Controls.Left = int32(rl.KeyA)
@@ -90,13 +107,19 @@ func (player *Player) InitPlayer() {
 	player.Controls.Crouch = int32(rl.KeyLeftControl)
 	player.Controls.Sprint = int32(rl.KeyLeftShift)
 	player.Controls.Zoom = int32(rl.KeyC)
+	player.Controls.Interact = int32(rl.KeyE)
 	player.InitCamera()
 }
 
-func (player *Player) UpdatePlayer(bounding_boxes []rl.BoundingBox) {
+func (player *Player) UpdatePlayer(bounding_boxes []rl.BoundingBox, trigger_boxes []TriggerBox, interactable_boxes []InteractableBox) {
+	player.FrameTime = rl.GetFrameTime()
 	player.LastKeyPressedPlayer()
 	player.AccelerationPlayer()
-	player.MovePlayer(bounding_boxes)
+	if player.Speed.Acceleration != 0. {
+		player.MovePlayer(bounding_boxes)
+		player.CheckTriggerBoxes(trigger_boxes)
+	}
+	player.CheckInteractableBoxes(interactable_boxes)
 	player.RotatePlayer()
 	player.ApplyGravityToPlayer(bounding_boxes)
 	player.updateCameraFirstPerson()
@@ -118,7 +141,7 @@ func (player *Player) LastKeyPressedPlayer() {
 }
 
 func (player *Player) AccelerationPlayer() {
-	final_speed := player.Speed.Acceleration * rl.GetFrameTime() * 60
+	final_speed := player.Speed.Acceleration * player.FrameTime * 60
 
 	keys_down := map[string]bool{"shift": rl.IsKeyDown(player.Controls.Sprint), "ctrl": rl.IsKeyDown(player.Controls.Crouch), "w": rl.IsKeyDown(player.Controls.Forward), "s": rl.IsKeyDown(player.Controls.Backward), "a": rl.IsKeyDown(player.Controls.Left), "d": rl.IsKeyDown(player.Controls.Right)}
 	if !keys_down["w"] && !keys_down["s"] && !keys_down["a"] && !keys_down["d"] {
@@ -165,7 +188,7 @@ func (player *Player) MovePlayer(bounding_boxes []rl.BoundingBox) {
 		player.YVelocity = player.JumpPower
 	}
 
-	player.Position.Y += player.YVelocity * (rl.GetFrameTime() * 60)
+	player.Position.Y += player.YVelocity * (player.FrameTime * 60)
 
 	player_position_after_moving := player.GetPlayerPositionAfterMoving()
 
@@ -202,7 +225,7 @@ func (player *Player) RotatePlayer() {
 }
 
 func (player *Player) ApplyGravityToPlayer(bounding_boxes []rl.BoundingBox) {
-	player.YVelocity -= player.Gravity * (rl.GetFrameTime() * 60)
+	player.YVelocity -= player.Gravity * (player.FrameTime * 60)
 
 	if player.CheckCollisionsYForPlayer(bounding_boxes) || player.GetPlayerPositionAfterMoving().Y-(player.Scale.Y/2) < 0. {
 		player.YVelocity = 0.
@@ -221,6 +244,11 @@ func (player Player) CheckCollisionsForPlayer(bounding_boxes []rl.BoundingBox) b
 	}
 
 	return false
+}
+
+func (player Player) CheckCollisionForPlayer(bounding_box rl.BoundingBox) bool {
+	return rl.CheckCollisionBoxes(rl.NewBoundingBox(rl.NewVector3(player.Position.X-player.Scale.X/2, player.Position.Y-player.Scale.Y/2, player.Position.Z-player.Scale.Z/2),
+		rl.NewVector3(player.Position.X+player.Scale.X/2, player.Position.Y+player.Scale.Y/2, player.Position.Z+player.Scale.Z/2)), bounding_box)
 }
 
 func (player Player) CheckCollisionsYForPlayer(bounding_boxes []rl.BoundingBox) bool {
@@ -257,7 +285,7 @@ func (player Player) CheckCollisionsXZForPlayer(bounding_boxes []rl.BoundingBox)
 }
 
 func (player Player) GetPlayerPositionAfterMoving() rl.Vector3 {
-	frame_time := rl.GetFrameTime() * 60
+	frame_time := player.FrameTime * 60
 
 	current_speed := player.Speed.Current
 
@@ -317,7 +345,7 @@ func (player Player) CheckPlayerUncrouch(bounding_boxes []rl.BoundingBox) bool {
 }
 
 func (player Player) CheckIfPlayerOnSurface(bounding_boxes []rl.BoundingBox) bool {
-	player.Position.Y -= player.Gravity * (rl.GetFrameTime() * 60)
+	player.Position.Y -= player.Gravity * (player.FrameTime * 60)
 	if player.CheckCollisionsYForPlayer(bounding_boxes) || player.Position.Y-(player.Scale.Y/2) < 0. {
 		return true
 	}
@@ -360,4 +388,43 @@ func (player *Player) ZoomCamera() {
 	} else {
 		player.Camera.Fovy = player.Fovs.Normal
 	}
+}
+
+func (player Player) CheckTriggerBoxes(trigger_boxes []TriggerBox) {
+	for i := range trigger_boxes {
+		if !trigger_boxes[i].Triggering {
+			trigger_boxes[i].Triggered = player.CheckCollisionForPlayer(trigger_boxes[i].BoundingBox)
+		} else {
+			trigger_boxes[i].Triggered = false
+		}
+		trigger_boxes[i].Triggering = player.CheckCollisionForPlayer(trigger_boxes[i].BoundingBox)
+	}
+}
+
+func NewTriggerBox(box rl.BoundingBox) TriggerBox {
+	return TriggerBox{box, false, false}
+}
+
+func (player Player) CheckInteractableBoxes(interactable_boxes []InteractableBox) {
+	for i := range interactable_boxes {
+		if rl.IsKeyDown(player.Controls.Interact) {
+			ray_collision := rl.GetRayCollisionBox(rl.GetMouseRay(rl.NewVector2(float32(rl.GetMonitorWidth(rl.GetCurrentMonitor()))/2, float32(rl.GetMonitorHeight(rl.GetCurrentMonitor()))/2), player.Camera), interactable_boxes[i].BoundingBox)
+
+			if ray_collision.Hit && ray_collision.Distance <= player.InteractRange {
+				if !interactable_boxes[i].Interacting {
+					interactable_boxes[i].Interacted = true
+				} else {
+					interactable_boxes[i].Interacted = false
+				}
+				interactable_boxes[i].Interacting = true
+			}
+		} else {
+			interactable_boxes[i].Interacting = false
+			interactable_boxes[i].Interacted = false
+		}
+	}
+}
+
+func NewInteractableBox(box rl.BoundingBox) InteractableBox {
+	return InteractableBox{box, false, false}
 }
