@@ -1,4 +1,4 @@
-package main
+package rl_fp
 
 import (
 	"math"
