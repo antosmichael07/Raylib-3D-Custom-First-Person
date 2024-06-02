@@ -51,7 +51,7 @@ func main() {
 				fmt.Printf("Triggered %d\n", i)
 			}
 			if trigger_boxes[i].Triggering {
-				rl.DrawText(fmt.Sprintf("Triggering %d", i), 10, 10, 20, rl.White)
+				rl.DrawText(fmt.Sprintf("Triggering %d", i), 10, 30, 20, rl.White)
 			}
 		}
 		for i := range interractable_boxes {
@@ -59,7 +59,7 @@ func main() {
 				fmt.Printf("Interacted %d\n", i)
 			}
 			if interractable_boxes[i].Interacting {
-				rl.DrawText(fmt.Sprintf("Interacting %d", i), 10, 30, 20, rl.White)
+				rl.DrawText(fmt.Sprintf("Interacting %d", i), 10, 50, 20, rl.White)
 			}
 		}
 
@@ -77,6 +77,8 @@ func main() {
 		}
 
 		rl.EndMode3D()
+
+		rl.DrawFPS(10, 10)
 
 		rl.EndDrawing()
 	}
