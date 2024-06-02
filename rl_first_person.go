@@ -414,9 +414,8 @@ func (player *Player) CheckInteractableBoxes(interactable_boxes []InteractableBo
 			interactable_boxes[i].Interacted = false
 		}
 		if rl.IsKeyDown(player.Controls.Interact) && (!player.AlreadyInteracted || ray_collision.Distance > player.InteractRange) {
-			player.AlreadyInteracted = true
-
 			if ray_collision.Hit && ray_collision.Distance <= player.InteractRange {
+				player.AlreadyInteracted = true
 				if !interactable_boxes[i].Interacting {
 					interactable_boxes[i].Interacted = true
 				} else {
