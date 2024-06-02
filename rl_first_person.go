@@ -417,6 +417,11 @@ func (player *Player) UpdateInteractableBoxes(interactable_boxes []InteractableB
 
 func (player Player) DrawInteractIndicator(interactable_boxes []InteractableBox) {
 	for i := range interactable_boxes {
+		if interactable_boxes[i].Interacting {
+			return
+		}
+	}
+	for i := range interactable_boxes {
 		if interactable_boxes[i].RayCollision.Hit && interactable_boxes[i].RayCollision.Distance <= player.InteractRange {
 			rl.DrawText("Press interact button", int32(rl.GetScreenWidth()/2)-rl.MeasureText("Press interact button", 30)/2, int32(rl.GetScreenHeight()/2)-30, 30, rl.White)
 		}
