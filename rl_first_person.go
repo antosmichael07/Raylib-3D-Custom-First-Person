@@ -432,6 +432,11 @@ func (player *Player) CheckInteractableBoxes(interactable_boxes []InteractableBo
 			player.AlreadyInteracted = false
 		}
 	}
+	if rl.IsKeyDown(player.Controls.Interact) {
+		player.AlreadyInteracted = true
+	} else {
+		player.AlreadyInteracted = false
+	}
 }
 
 func NewInteractableBox(box rl.BoundingBox) InteractableBox {
