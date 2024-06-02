@@ -21,6 +21,7 @@ type Player struct {
 	LastKeyPressed    int32
 	FrameTime         float32
 	InteractRange     float32
+	AlreadyInteracted bool
 	Controls          Controls
 	Camera            rl.Camera3D
 }
@@ -98,7 +99,7 @@ func (player *Player) InitPlayer() {
 	player.JumpPower = .15
 	player.LastKeyPressed = -1
 	player.FrameTime = 0.
-	player.InteractRange = 2.
+	player.InteractRange = 3.
 	player.Controls.Forward = int32(rl.KeyW)
 	player.Controls.Backward = int32(rl.KeyS)
 	player.Controls.Left = int32(rl.KeyA)
@@ -405,10 +406,15 @@ func NewTriggerBox(box rl.BoundingBox) TriggerBox {
 	return TriggerBox{box, false, false}
 }
 
-func (player Player) CheckInteractableBoxes(interactable_boxes []InteractableBox) {
+func (player *Player) CheckInteractableBoxes(interactable_boxes []InteractableBox) {
 	for i := range interactable_boxes {
-		if rl.IsKeyDown(player.Controls.Interact) {
-			ray_collision := rl.GetRayCollisionBox(rl.GetMouseRay(rl.NewVector2(float32(rl.GetMonitorWidth(rl.GetCurrentMonitor()))/2, float32(rl.GetMonitorHeight(rl.GetCurrentMonitor()))/2), player.Camera), interactable_boxes[i].BoundingBox)
+		ray_collision := rl.GetRayCollisionBox(rl.GetMouseRay(rl.NewVector2(float32(rl.GetMonitorWidth(rl.GetCurrentMonitor()))/2, float32(rl.GetMonitorHeight(rl.GetCurrentMonitor()))/2), player.Camera), interactable_boxes[i].BoundingBox)
+
+		if player.AlreadyInteracted {
+			interactable_boxes[i].Interacted = false
+		}
+		if rl.IsKeyDown(player.Controls.Interact) && (!player.AlreadyInteracted || ray_collision.Distance > player.InteractRange) {
+			player.AlreadyInteracted = true
 
 			if ray_collision.Hit && ray_collision.Distance <= player.InteractRange {
 				if !interactable_boxes[i].Interacting {
@@ -417,10 +423,14 @@ func (player Player) CheckInteractableBoxes(interactable_boxes []InteractableBox
 					interactable_boxes[i].Interacted = false
 				}
 				interactable_boxes[i].Interacting = true
+			} else {
+				interactable_boxes[i].Interacting = false
+				interactable_boxes[i].Interacted = false
 			}
-		} else {
+		} else if !rl.IsKeyDown(player.Controls.Interact) {
 			interactable_boxes[i].Interacting = false
 			interactable_boxes[i].Interacted = false
+			player.AlreadyInteracted = false
 		}
 	}
 }
