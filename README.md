@@ -4,6 +4,8 @@ Install with `go get github.com/antosmichael07/Raylib-3D-Custom-First-Person`
 
 ## Example
 
+The function `player.UpdatePlayer()` has to be at the last lines, because it draws on screen `Press E to interact`, if it was as the first lines, then it would be under every other thing that you draw.
+
 ```go
 package main
 
@@ -40,8 +42,6 @@ func main() {
 	}
 
 	for !rl.WindowShouldClose() {
-		player.UpdatePlayer(bounding_boxes, trigger_boxes, interractable_boxes)
-
 		rl.BeginDrawing()
 
 		rl.ClearBackground(rl.Black)
@@ -78,6 +78,7 @@ func main() {
 
 		rl.EndMode3D()
 
+		player.UpdatePlayer(bounding_boxes, trigger_boxes, interractable_boxes)
 		rl.DrawFPS(10, 10)
 
 		rl.EndDrawing()
