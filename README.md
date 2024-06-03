@@ -4,7 +4,7 @@ Install with `go get github.com/antosmichael07/Raylib-3D-Custom-First-Person`
 
 ## Example
 
-The function `player.UpdatePlayer()` has to be at the last lines, because it draws on screen `Press E to interact`, if it was as the first lines, then it would be under every other thing that you draw.
+The function `player.UpdatePlayer()` has to be at the last lines of the game loop, because it draws on screen `Press E to interact`, if it was at the first lines of the game loop, then it would be under every other thing that you draw.
 
 ```go
 package main
