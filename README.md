@@ -1,5 +1,6 @@
 # Custom First Person For Raylib
 
+Advanced library for advanced managing first person games.<br>
 Install with `go get github.com/antosmichael07/Raylib-3D-Custom-First-Person`
 
 ## Example
