@@ -28,6 +28,7 @@ func main() {
 	player.InitPlayer()
 
 	bounding_boxes := []rl.BoundingBox{
+		rl.NewBoundingBox(rl.NewVector3(1.5, -.5, -.5), rl.NewVector3(2.5, .5, .5)),
 		rl.NewBoundingBox(rl.NewVector3(-.5, 0., -.5), rl.NewVector3(.5, 1., .5)),
 		rl.NewBoundingBox(rl.NewVector3(-2.5, .5, -.5), rl.NewVector3(-1.5, 1.5, .5)),
 		rl.NewBoundingBox(rl.NewVector3(-4.5, 1., -.5), rl.NewVector3(-3.5, 2., .5)),
