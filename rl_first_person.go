@@ -207,6 +207,11 @@ func (player *Player) MovePlayer(bounding_boxes []rl.BoundingBox) {
 		return
 	}
 
+	if player.CheckCollisionsForPlayer(bounding_boxes) {
+		player.Position.X = player_position_after_moving.X
+		return
+	}
+
 	player.Position = player_position_after_moving
 }
 
