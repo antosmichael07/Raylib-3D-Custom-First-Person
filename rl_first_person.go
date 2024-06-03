@@ -1,4 +1,4 @@
-package main
+package rl_fp
 
 import (
 	"fmt"
@@ -24,6 +24,8 @@ type Player struct {
 	FrameTime         float32
 	InteractRange     float32
 	AlreadyInteracted bool
+	StepHeight        float32
+	Stepped           bool
 	Controls          Controls
 	Camera            rl.Camera3D
 }
@@ -103,6 +105,9 @@ func (player *Player) InitPlayer() {
 	player.LastKeyPressed = -1
 	player.FrameTime = 0.
 	player.InteractRange = 3.
+	player.AlreadyInteracted = false
+	player.StepHeight = .5
+	player.Stepped = false
 	player.Controls.Forward = int32(rl.KeyW)
 	player.Controls.Backward = int32(rl.KeyS)
 	player.Controls.Left = int32(rl.KeyA)
@@ -121,6 +126,7 @@ func (player *Player) UpdatePlayer(bounding_boxes []rl.BoundingBox, trigger_boxe
 	player.AccelerationPlayer()
 	player.ApplyGravityToPlayer(bounding_boxes)
 	if player.Speed.Acceleration != 0. {
+		player.StepPlayer(bounding_boxes)
 		player.MovePlayer(bounding_boxes)
 		player.CheckTriggerBoxes(trigger_boxes)
 	}
@@ -172,6 +178,98 @@ func (player *Player) AccelerationPlayer() {
 	}
 }
 
+func (player *Player) StepPlayer(bounding_boxes []rl.BoundingBox) {
+	player.Stepped = false
+	player_tmp := *player
+	player_tmp.Position.Y += player.StepHeight + 0.0001
+	if !player_tmp.CheckCollisionsYForPlayer(bounding_boxes) && !player_tmp.CheckCollisionsForPlayer(bounding_boxes) && player.CheckCollisionsForPlayer(bounding_boxes) && player.YVelocity == 0. {
+		player_position_after_moving := player.GetPlayerPositionAfterMoving()
+		player.Position.Y = (player.CheckCollisionsForPlayerAsHighestPoint(bounding_boxes) + player.Scale.Y/2) + 0.0001
+		player.Position.X = player_position_after_moving.X
+		player.Position.Z = player_position_after_moving.Z
+		player.Stepped = true
+		return
+	}
+	collision_x, collision_z := player.CheckCollisionsXZForPlayerWithY(bounding_boxes)
+	tmp_collision_x, tmp_collision_z := player_tmp.CheckCollisionsXZForPlayerWithY(bounding_boxes)
+	if !player_tmp.CheckCollisionsYForPlayer(bounding_boxes) && !tmp_collision_x && collision_x && player.YVelocity == 0. {
+		player.Position.Y += (player.CheckCollisionsXForPlayerAsHighestPoint(bounding_boxes)) + 0.0001
+		player.Position.X = player.GetPlayerPositionAfterMoving().X
+		player.Stepped = true
+		return
+	}
+	if !player_tmp.CheckCollisionsYForPlayer(bounding_boxes) && !tmp_collision_z && collision_z && player.YVelocity == 0. {
+		player.Position.Y += (player.CheckCollisionsZForPlayerAsHighestPoint(bounding_boxes)) + 0.0001
+		player.Position.Z = player.GetPlayerPositionAfterMoving().Z
+		player.Stepped = true
+		return
+	}
+}
+
+func (player Player) CheckCollisionsForPlayerAsHighestPoint(bounding_boxes []rl.BoundingBox) float32 {
+	player.Position = player.GetPlayerPositionAfterMoving()
+
+	highest_y := float32(0.)
+	for _, box := range bounding_boxes {
+		if rl.CheckCollisionBoxes(rl.NewBoundingBox(rl.NewVector3(player.Position.X-player.Scale.X/2, player.Position.Y-player.Scale.Y/2, player.Position.Z-player.Scale.Z/2),
+			rl.NewVector3(player.Position.X+player.Scale.X/2, player.Position.Y+player.Scale.Y/2, player.Position.Z+player.Scale.Z/2)), box) {
+			if box.Max.Y > highest_y {
+				if box.Min.Y <= box.Max.Y {
+					highest_y = box.Max.Y
+				} else {
+					highest_y = box.Min.Y
+				}
+			}
+		}
+	}
+
+	return highest_y
+}
+
+func (player Player) CheckCollisionsXForPlayerAsHighestPoint(bounding_boxes []rl.BoundingBox) float32 {
+	player_position_after_moving := player.GetPlayerPositionAfterMoving()
+	player.Position.X = player_position_after_moving.X
+	player.Position.Y = player_position_after_moving.Y
+
+	highest_y := float32(0.)
+	for _, box := range bounding_boxes {
+		if rl.CheckCollisionBoxes(rl.NewBoundingBox(rl.NewVector3(player.Position.X-player.Scale.X/2, player.Position.Y-player.Scale.Y/2, player.Position.Z-player.Scale.Z/2),
+			rl.NewVector3(player.Position.X+player.Scale.X/2, player.Position.Y+player.Scale.Y/2, player.Position.Z+player.Scale.Z/2)), box) {
+			if box.Max.Y > highest_y {
+				if box.Min.Y <= box.Max.Y {
+					highest_y = box.Max.Y
+				} else {
+					highest_y = box.Min.Y
+				}
+			}
+		}
+	}
+
+	return highest_y
+}
+
+func (player Player) CheckCollisionsZForPlayerAsHighestPoint(bounding_boxes []rl.BoundingBox) float32 {
+	player_position_after_moving := player.GetPlayerPositionAfterMoving()
+	player.Position.Z = player_position_after_moving.Z
+	player.Position.Y = player_position_after_moving.Y
+
+	highest_y := float32(0.)
+	for _, box := range bounding_boxes {
+		if rl.CheckCollisionBoxes(rl.NewBoundingBox(rl.NewVector3(player.Position.X-player.Scale.X/2, player.Position.Y-player.Scale.Y/2, player.Position.Z-player.Scale.Z/2),
+			rl.NewVector3(player.Position.X+player.Scale.X/2, player.Position.Y+player.Scale.Y/2, player.Position.Z+player.Scale.Z/2)), box) {
+			if box.Max.Y > highest_y {
+				if box.Min.Y <= box.Max.Y {
+					highest_y = box.Max.Y
+				} else {
+					highest_y = box.Min.Y
+				}
+			}
+		}
+	}
+
+	return highest_y
+}
+
 func (player *Player) MovePlayer(bounding_boxes []rl.BoundingBox) {
 	half_crouch_scale := player.ConstScale.Crouch / 2
 
@@ -194,26 +292,28 @@ func (player *Player) MovePlayer(bounding_boxes []rl.BoundingBox) {
 
 	player.Position.Y += player.YVelocity * (player.FrameTime * 60)
 
-	player_position_after_moving := player.GetPlayerPositionAfterMoving()
+	if !player.Stepped {
+		player_position_after_moving := player.GetPlayerPositionAfterMoving()
 
-	collisions_x, collisions_z := player.CheckCollisionsXZForPlayer(bounding_boxes)
-	if collisions_x && collisions_z {
-		return
-	} else if collisions_x {
+		collisions_x, collisions_z := player.CheckCollisionsXZForPlayer(bounding_boxes)
+		if collisions_x && collisions_z {
+			return
+		} else if collisions_x {
+			player.Position.Z = player_position_after_moving.Z
+			return
+		} else if collisions_z {
+			player.Position.X = player_position_after_moving.X
+			return
+		}
+
+		if player.CheckCollisionsForPlayer(bounding_boxes) {
+			player.Position.X = player_position_after_moving.X
+			return
+		}
+
+		player.Position.X = player_position_after_moving.X
 		player.Position.Z = player_position_after_moving.Z
-		return
-	} else if collisions_z {
-		player.Position.X = player_position_after_moving.X
-		return
 	}
-
-	if player.CheckCollisionsForPlayer(bounding_boxes) {
-		player.Position.X = player_position_after_moving.X
-		return
-	}
-
-	player.Position.X = player_position_after_moving.X
-	player.Position.Z = player_position_after_moving.Z
 }
 
 func (player *Player) RotatePlayer() {
@@ -235,9 +335,12 @@ func (player *Player) RotatePlayer() {
 }
 
 func (player *Player) ApplyGravityToPlayer(bounding_boxes []rl.BoundingBox) {
-	player.YVelocity -= player.Gravity * (player.FrameTime * 60)
+	frame_time := player.FrameTime * 60
 
-	if player.CheckCollisionsYForPlayer(bounding_boxes) || player.GetPlayerPositionAfterMoving().Y-(player.Scale.Y/2) < 0. {
+	player.YVelocity -= player.Gravity * frame_time
+
+	player_y_after_falling := player.Position.Y + player.YVelocity*frame_time
+	if player.CheckCollisionsYForPlayer(bounding_boxes) || player_y_after_falling-(player.Scale.Y/2) < 0. {
 		player.YVelocity = 0.
 		return
 	}
@@ -287,6 +390,30 @@ func (player Player) CheckCollisionsXZForPlayer(bounding_boxes []rl.BoundingBox)
 	for _, box := range bounding_boxes {
 		if rl.CheckCollisionBoxes(rl.NewBoundingBox(rl.NewVector3(player.Position.X-player.Scale.X/2, player.Position.Y-player.Scale.Y/2, player_position_z-player.Scale.Z/2),
 			rl.NewVector3(player.Position.X+player.Scale.X/2, player.Position.Y+player.Scale.Y/2, player_position_z+player.Scale.Z/2)), box) {
+			collision_z = true
+		}
+	}
+
+	return collision_x, collision_z
+}
+
+func (player Player) CheckCollisionsXZForPlayerWithY(bounding_boxes []rl.BoundingBox) (bool, bool) {
+	player_position_after_moving := player.GetPlayerPositionAfterMoving()
+
+	collision_x, collision_z := false, false
+
+	player_position_x := player_position_after_moving.X
+	for _, box := range bounding_boxes {
+		if rl.CheckCollisionBoxes(rl.NewBoundingBox(rl.NewVector3(player_position_x-player.Scale.X/2, player_position_after_moving.Y-player.Scale.Y/2, player.Position.Z-player.Scale.Z/2),
+			rl.NewVector3(player_position_x+player.Scale.X/2, player_position_after_moving.Y+player.Scale.Y/2, player.Position.Z+player.Scale.Z/2)), box) {
+			collision_x = true
+		}
+	}
+
+	player_position_z := player_position_after_moving.Z
+	for _, box := range bounding_boxes {
+		if rl.CheckCollisionBoxes(rl.NewBoundingBox(rl.NewVector3(player.Position.X-player.Scale.X/2, player_position_after_moving.Y-player.Scale.Y/2, player_position_z-player.Scale.Z/2),
+			rl.NewVector3(player.Position.X+player.Scale.X/2, player_position_after_moving.Y+player.Scale.Y/2, player_position_z+player.Scale.Z/2)), box) {
 			collision_z = true
 		}
 	}
