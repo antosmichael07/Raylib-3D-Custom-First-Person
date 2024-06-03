@@ -1,7 +1,9 @@
 package rl_fp
 
 import (
+	"fmt"
 	"math"
+	"strings"
 
 	rl "github.com/gen2brain/raylib-go/raylib"
 )
@@ -421,9 +423,11 @@ func (player Player) DrawInteractIndicator(interactable_boxes []InteractableBox)
 			return
 		}
 	}
+	text := fmt.Sprintf("Press %s to interact", strings.ToUpper(string(player.Controls.Interact)))
+	text_size := rl.MeasureText(text, 30)
 	for i := range interactable_boxes {
 		if interactable_boxes[i].RayCollision.Hit && interactable_boxes[i].RayCollision.Distance <= player.InteractRange {
-			rl.DrawText("Press interact button", int32(rl.GetScreenWidth()/2)-rl.MeasureText("Press interact button", 30)/2, int32(rl.GetScreenHeight()/2)-30, 30, rl.White)
+			rl.DrawText(text, int32(rl.GetScreenWidth()/2)-text_size/2, int32(rl.GetScreenHeight()/2)-30, 30, rl.White)
 		}
 	}
 }
