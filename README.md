@@ -29,14 +29,14 @@ func main() {
 	player.InitPlayer()
 
 	bounding_boxes := []rl.BoundingBox{
-		rl.NewBoundingBox(rl.NewVector3(1.5, -.5, -.5), rl.NewVector3(2.5, .5, .5)),
-		rl.NewBoundingBox(rl.NewVector3(-.5, 0., -.5), rl.NewVector3(.5, 1., .5)),
-		rl.NewBoundingBox(rl.NewVector3(-2.5, .5, -.5), rl.NewVector3(-1.5, 1.5, .5)),
-		rl.NewBoundingBox(rl.NewVector3(-4.5, 1., -.5), rl.NewVector3(-3.5, 2., .5)),
+		rl.NewBoundingBox(rl.NewVector3(-1.5, -.5, -.5), rl.NewVector3(-.5, .5, .5)),
+		rl.NewBoundingBox(rl.NewVector3(-2.5, 0., -.5), rl.NewVector3(-1.5, 1., .5)),
+		rl.NewBoundingBox(rl.NewVector3(-4.5, .5, -.5), rl.NewVector3(-3.5, 1.5, .5)),
+		rl.NewBoundingBox(rl.NewVector3(-5.5, 1., -.5), rl.NewVector3(-4.5, 2., .5)),
 	}
 	trigger_boxes := []rl_fp.TriggerBox{
-		rl_fp.NewTriggerBox(rl.NewBoundingBox(rl.NewVector3(3.5, 1., -.5), rl.NewVector3(4.5, 2., .5))),
-		rl_fp.NewTriggerBox(rl.NewBoundingBox(rl.NewVector3(5.5, 2.5, -.5), rl.NewVector3(6.5, 3.5, .5))),
+		rl_fp.NewTriggerBox(rl.NewBoundingBox(rl.NewVector3(2.5, 1., -.5), rl.NewVector3(3.5, 2., .5))),
+		rl_fp.NewTriggerBox(rl.NewBoundingBox(rl.NewVector3(4.5, 2.5, -.5), rl.NewVector3(5.5, 3.5, .5))),
 	}
 	interractable_boxes := []rl_fp.InteractableBox{
 		rl_fp.NewInteractableBox(rl.NewBoundingBox(rl.NewVector3(7.5, 0., -.5), rl.NewVector3(8.5, 1., .5))),
