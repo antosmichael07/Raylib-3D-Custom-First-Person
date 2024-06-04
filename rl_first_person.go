@@ -193,13 +193,13 @@ func (player *Player) StepPlayer(bounding_boxes []rl.BoundingBox) {
 	collision_x, collision_z := player.CheckCollisionsXZForPlayerWithY(bounding_boxes)
 	tmp_collision_x, tmp_collision_z := player_tmp.CheckCollisionsXZForPlayerWithY(bounding_boxes)
 	if !player_tmp.CheckCollisionsYForPlayer(bounding_boxes) && !tmp_collision_x && collision_x && player.YVelocity == 0. {
-		player.Position.Y = (player.CheckCollisionsForPlayerAsHighestPoint(bounding_boxes) + player.Scale.Y/2) + 0.0001
+		player.Position.Y = (player.CheckCollisionsXForPlayerAsHighestPoint(bounding_boxes) + player.Scale.Y/2) + 0.0001
 		player.Position.X = player.GetPlayerPositionAfterMoving().X
 		player.Stepped = true
 		return
 	}
 	if !player_tmp.CheckCollisionsYForPlayer(bounding_boxes) && !tmp_collision_z && collision_z && player.YVelocity == 0. {
-		player.Position.Y = (player.CheckCollisionsForPlayerAsHighestPoint(bounding_boxes) + player.Scale.Y/2) + 0.0001
+		player.Position.Y = (player.CheckCollisionsZForPlayerAsHighestPoint(bounding_boxes) + player.Scale.Y/2) + 0.0001
 		player.Position.Z = player.GetPlayerPositionAfterMoving().Z
 		player.Stepped = true
 		return
