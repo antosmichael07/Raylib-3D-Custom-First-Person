@@ -132,7 +132,7 @@ func (player *Player) UpdatePlayer(bounding_boxes []rl.BoundingBox, trigger_boxe
 	}
 	player.UpdateInteractableBoxes(interactable_boxes)
 	player.RotatePlayer()
-	player.updateCameraFirstPerson()
+	player.UpdateCameraFirstPerson()
 }
 
 func (player *Player) LastKeyPressedPlayer() {
@@ -574,7 +574,7 @@ func (player *Player) InitCamera() {
 	player.Camera.Projection = rl.CameraPerspective
 }
 
-func (player *Player) updateCameraFirstPerson() {
+func (player *Player) UpdateCameraFirstPerson() {
 	player.MoveCamera()
 	player.RotateCamera()
 	player.ZoomCamera()
