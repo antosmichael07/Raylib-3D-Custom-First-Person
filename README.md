@@ -5,8 +5,6 @@ Install with `go get github.com/antosmichael07/Raylib-3D-Custom-First-Person`
 
 ## Example
 
-The function `player.UpdatePlayer()` has to be at the last lines of the game loop, because it draws on screen `Press E to interact`, if it was at the first lines of the game loop, then it would be under every other thing that you draw.
-
 ```go
 package main
 
@@ -23,65 +21,52 @@ func main() {
 	rl.ToggleFullscreen()
 	rl.DisableCursor()
 	rl.SetTargetFPS(int32(rl.GetMonitorRefreshRate(current_monitor)))
+	rl.SetExitKey(-1)
 	defer rl.CloseWindow()
 
-	player := rl_fp.Player{}
-	player.InitPlayer()
-
-	bounding_boxes := []rl.BoundingBox{
-		rl.NewBoundingBox(rl.NewVector3(-1.5, -.5, -.5), rl.NewVector3(-.5, .5, .5)),
-		rl.NewBoundingBox(rl.NewVector3(-2.5, 0., -.5), rl.NewVector3(-1.5, 1., .5)),
-		rl.NewBoundingBox(rl.NewVector3(-4.5, .5, -.5), rl.NewVector3(-3.5, 1.5, .5)),
-		rl.NewBoundingBox(rl.NewVector3(-5.5, 1., -.5), rl.NewVector3(-4.5, 2., .5)),
-	}
-	trigger_boxes := []rl_fp.TriggerBox{
-		rl_fp.NewTriggerBox(rl.NewBoundingBox(rl.NewVector3(2.5, 1., -.5), rl.NewVector3(3.5, 2., .5))),
-		rl_fp.NewTriggerBox(rl.NewBoundingBox(rl.NewVector3(4.5, 2.5, -.5), rl.NewVector3(5.5, 3.5, .5))),
-	}
-	interractable_boxes := []rl_fp.InteractableBox{
-		rl_fp.NewInteractableBox(rl.NewBoundingBox(rl.NewVector3(7.5, 0., -.5), rl.NewVector3(8.5, 1., .5))),
-		rl_fp.NewInteractableBox(rl.NewBoundingBox(rl.NewVector3(7.5, .5, -.5), rl.NewVector3(8.5, 1.5, .5))),
-	}
+	world := rl_fp.World{}
+	world.InitWorld(0.)
 
 	for !rl.WindowShouldClose() {
+		world.UpdatePlayer()
+
 		rl.BeginDrawing()
-
 		rl.ClearBackground(rl.Black)
+		rl.BeginMode3D(world.Player.Camera)
 
-		for i := range trigger_boxes {
-			if trigger_boxes[i].Triggered {
+		rl.DrawGrid(100, 10.)
+
+		for i := range world.BoundingBoxes {
+			rl.DrawBoundingBox(world.BoundingBoxes[i], rl.Red)
+		}
+		for i := range world.TriggerBoxes {
+			rl.DrawBoundingBox(world.TriggerBoxes[i].BoundingBox, rl.Green)
+		}
+		for i := range world.InteractableBoxes {
+			rl.DrawBoundingBox(world.InteractableBoxes[i].BoundingBox, rl.Blue)
+		}
+
+		world.DrawInteractIndicator()
+
+		rl.EndMode3D()
+		rl.DrawFPS(10, 10)
+
+		for i := range world.TriggerBoxes {
+			if world.TriggerBoxes[i].Triggered {
 				fmt.Printf("Triggered %d\n", i)
 			}
-			if trigger_boxes[i].Triggering {
+			if world.TriggerBoxes[i].Triggering {
 				rl.DrawText(fmt.Sprintf("Triggering %d", i), 10, 30, 20, rl.White)
 			}
 		}
-		for i := range interractable_boxes {
-			if interractable_boxes[i].Interacted {
+		for i := range world.InteractableBoxes {
+			if world.InteractableBoxes[i].Interacted {
 				fmt.Printf("Interacted %d\n", i)
 			}
-			if interractable_boxes[i].Interacting {
+			if world.InteractableBoxes[i].Interacting {
 				rl.DrawText(fmt.Sprintf("Interacting %d", i), 10, 50, 20, rl.White)
 			}
 		}
-
-		rl.BeginMode3D(player.Camera)
-
-		rl.DrawGrid(20, 1.)
-		for i := range bounding_boxes {
-			rl.DrawBoundingBox(bounding_boxes[i], rl.Red)
-		}
-		for i := range trigger_boxes {
-			rl.DrawBoundingBox(trigger_boxes[i].BoundingBox, rl.Green)
-		}
-		for i := range interractable_boxes {
-			rl.DrawBoundingBox(interractable_boxes[i].BoundingBox, rl.Blue)
-		}
-
-		rl.EndMode3D()
-
-		player.UpdatePlayer(bounding_boxes, trigger_boxes, interractable_boxes)
-		rl.DrawFPS(10, 10)
 
 		rl.EndDrawing()
 	}
