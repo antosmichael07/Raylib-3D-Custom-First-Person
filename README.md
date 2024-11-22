@@ -27,6 +27,20 @@ func main() {
 	world := rl_fp.World{}
 	world.InitWorld(0.)
 
+	world.BoundingBoxes = []rl.BoundingBox{
+		rl.NewBoundingBox(rl.NewVector3(20, 0, 0), rl.NewVector3(30, 10, 10)),
+		rl.NewBoundingBox(rl.NewVector3(40, 5, 0), rl.NewVector3(50, 15, 10)),
+		rl.NewBoundingBox(rl.NewVector3(60, 10, 0), rl.NewVector3(70, 20, 10)),
+	}
+	world.TriggerBoxes = []rl_fp.TriggerBox{
+		rl_fp.NewTriggerBox(rl.NewBoundingBox(rl.NewVector3(-10, 0, 50), rl.NewVector3(0, 10, 60))),
+		rl_fp.NewTriggerBox(rl.NewBoundingBox(rl.NewVector3(-10, 20, 70), rl.NewVector3(0, 30, 80))),
+	}
+	world.InteractableBoxes = []rl_fp.InteractableBox{
+		rl_fp.NewInteractableBox(rl.NewBoundingBox(rl.NewVector3(-10, 0, -60), rl.NewVector3(0, 10, -50))),
+		rl_fp.NewInteractableBox(rl.NewBoundingBox(rl.NewVector3(-10, 20, -80), rl.NewVector3(0, 30, -70))),
+	}
+
 	for !rl.WindowShouldClose() {
 		world.UpdatePlayer()
 
@@ -46,10 +60,9 @@ func main() {
 			rl.DrawBoundingBox(world.InteractableBoxes[i].BoundingBox, rl.Blue)
 		}
 
-		world.DrawInteractIndicator()
-
 		rl.EndMode3D()
-		rl.DrawFPS(10, 10)
+
+		world.DrawInteractIndicator()
 
 		for i := range world.TriggerBoxes {
 			if world.TriggerBoxes[i].Triggered {
@@ -68,7 +81,9 @@ func main() {
 			}
 		}
 
+		rl.DrawFPS(10, 10)
 		rl.EndDrawing()
 	}
 }
+
 ```
