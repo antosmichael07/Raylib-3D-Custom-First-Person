@@ -122,8 +122,8 @@ func (player *Player) InitPlayer() {
 	player.ConstScale.Crouch = 9.
 	player.IsCrouching = false
 	player.YVelocity = 0.
-	player.Gravity = .04
-	player.JumpPower = .8
+	player.Gravity = .06
+	player.JumpPower = 1.2
 	player.LastKeyPressed = -1
 	player.FrameTime = 0.
 	player.InteractRange = 30.
