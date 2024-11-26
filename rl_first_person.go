@@ -344,11 +344,11 @@ func (player *Player) RotatePlayer() {
 		player.Rotation.Y -= mouse_delta.Y * player.MouseSensitivity.Normal
 	}
 
-	if player.Rotation.Y > 1.5 {
-		player.Rotation.Y = 1.5
+	if player.Rotation.Y > 1.57 {
+		player.Rotation.Y = 1.57
 	}
-	if player.Rotation.Y < -1.5 {
-		player.Rotation.Y = -1.5
+	if player.Rotation.Y < -1.57 {
+		player.Rotation.Y = -1.57
 	}
 }
 
