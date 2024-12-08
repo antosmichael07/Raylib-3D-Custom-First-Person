@@ -42,7 +42,7 @@ func main() {
 	}
 
 	for !rl.WindowShouldClose() {
-		world.UpdatePlayer()
+		world.Update()
 
 		rl.BeginDrawing()
 		rl.ClearBackground(rl.Black)
