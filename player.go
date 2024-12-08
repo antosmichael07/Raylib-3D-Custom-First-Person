@@ -16,6 +16,8 @@ const (
 	ControlSprint
 	ControlZoom
 	ControlInteract
+
+	ControlCount
 )
 
 type Player struct {
@@ -36,8 +38,8 @@ type Player struct {
 	AlreadyInteracted         bool
 	StepHeight                float32
 	Stepped                   bool
-	Controls                  Controls
-	CurrentInputs             [9]bool
+	Controls                  [ControlCount]int32
+	CurrentInputs             [ControlCount]bool
 	Camera                    rl.Camera3D
 }
 
@@ -62,18 +64,6 @@ type FOVs struct {
 type Scale struct {
 	Normal float32
 	Crouch float32
-}
-
-type Controls struct {
-	Forward  int32
-	Backward int32
-	Left     int32
-	Right    int32
-	Jump     int32
-	Crouch   int32
-	Sprint   int32
-	Zoom     int32
-	Interact int32
 }
 
 func (player *Player) InitPlayer() {
@@ -101,15 +91,15 @@ func (player *Player) InitPlayer() {
 	player.AlreadyInteracted = false
 	player.StepHeight = 5.
 	player.Stepped = false
-	player.Controls.Forward = rl.KeyW
-	player.Controls.Backward = rl.KeyS
-	player.Controls.Left = rl.KeyA
-	player.Controls.Right = rl.KeyD
-	player.Controls.Jump = rl.KeySpace
-	player.Controls.Crouch = rl.KeyLeftControl
-	player.Controls.Sprint = rl.KeyLeftShift
-	player.Controls.Zoom = rl.KeyC
-	player.Controls.Interact = rl.KeyE
+	player.Controls[ControlForward] = rl.KeyW
+	player.Controls[ControlBackward] = rl.KeyS
+	player.Controls[ControlLeft] = rl.KeyA
+	player.Controls[ControlRight] = rl.KeyD
+	player.Controls[ControlJump] = rl.KeySpace
+	player.Controls[ControlCrouch] = rl.KeyLeftControl
+	player.Controls[ControlSprint] = rl.KeyLeftShift
+	player.Controls[ControlZoom] = rl.KeyC
+	player.Controls[ControlInteract] = rl.KeyE
 	player.CurrentInputs = [9]bool{false, false, false, false, false, false, false, false, false}
 	player.InitCamera()
 }
@@ -146,19 +136,19 @@ func (player *Player) GetPositionXYZNextFrame() rl.Vector3 {
 		float32(math.Sin(float64(player.Rotation.X))) * final_speed,
 	}
 
-	if player.CurrentInputs[ControlForward] || player.LastDirectionalKeyPressed == player.Controls.Forward {
+	if player.CurrentInputs[ControlForward] || player.LastDirectionalKeyPressed == player.Controls[ControlForward] {
 		player_position.X -= speeds.X
 		player_position.Z -= speeds.Z
 	}
-	if player.CurrentInputs[ControlBackward] || player.LastDirectionalKeyPressed == player.Controls.Backward {
+	if player.CurrentInputs[ControlBackward] || player.LastDirectionalKeyPressed == player.Controls[ControlBackward] {
 		player_position.X += speeds.X
 		player_position.Z += speeds.Z
 	}
-	if player.CurrentInputs[ControlLeft] || player.LastDirectionalKeyPressed == player.Controls.Left {
+	if player.CurrentInputs[ControlLeft] || player.LastDirectionalKeyPressed == player.Controls[ControlLeft] {
 		player_position.Z += speeds.X
 		player_position.X -= speeds.Z
 	}
-	if player.CurrentInputs[ControlRight] || player.LastDirectionalKeyPressed == player.Controls.Right {
+	if player.CurrentInputs[ControlRight] || player.LastDirectionalKeyPressed == player.Controls[ControlRight] {
 		player_position.Z -= speeds.X
 		player_position.X += speeds.Z
 	}

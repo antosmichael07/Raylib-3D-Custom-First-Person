@@ -44,15 +44,15 @@ func (world *World) UpdateVariables() {
 }
 
 func (player *Player) UpdateCurrentInputs() {
-	player.CurrentInputs[ControlForward] = rl.IsKeyDown(player.Controls.Forward)
-	player.CurrentInputs[ControlBackward] = rl.IsKeyDown(player.Controls.Backward)
-	player.CurrentInputs[ControlLeft] = rl.IsKeyDown(player.Controls.Left)
-	player.CurrentInputs[ControlRight] = rl.IsKeyDown(player.Controls.Right)
-	player.CurrentInputs[ControlJump] = rl.IsKeyDown(player.Controls.Jump)
-	player.CurrentInputs[ControlCrouch] = rl.IsKeyDown(player.Controls.Crouch)
-	player.CurrentInputs[ControlSprint] = rl.IsKeyDown(player.Controls.Sprint)
-	player.CurrentInputs[ControlZoom] = rl.IsKeyDown(player.Controls.Zoom)
-	player.CurrentInputs[ControlInteract] = rl.IsKeyDown(player.Controls.Interact)
+	player.CurrentInputs[ControlForward] = rl.IsKeyDown(player.Controls[ControlForward])
+	player.CurrentInputs[ControlBackward] = rl.IsKeyDown(player.Controls[ControlBackward])
+	player.CurrentInputs[ControlLeft] = rl.IsKeyDown(player.Controls[ControlLeft])
+	player.CurrentInputs[ControlRight] = rl.IsKeyDown(player.Controls[ControlRight])
+	player.CurrentInputs[ControlJump] = rl.IsKeyDown(player.Controls[ControlJump])
+	player.CurrentInputs[ControlCrouch] = rl.IsKeyDown(player.Controls[ControlCrouch])
+	player.CurrentInputs[ControlSprint] = rl.IsKeyDown(player.Controls[ControlSprint])
+	player.CurrentInputs[ControlZoom] = rl.IsKeyDown(player.Controls[ControlZoom])
+	player.CurrentInputs[ControlInteract] = rl.IsKeyDown(player.Controls[ControlInteract])
 }
 
 func (player *Player) UpdateFrameTime() {
@@ -61,16 +61,16 @@ func (player *Player) UpdateFrameTime() {
 
 func (player *Player) UpdateLastDirectionalKeyPressed() {
 	if player.CurrentInputs[ControlForward] {
-		player.LastDirectionalKeyPressed = player.Controls.Forward
+		player.LastDirectionalKeyPressed = player.Controls[ControlForward]
 	}
 	if player.CurrentInputs[ControlBackward] {
-		player.LastDirectionalKeyPressed = player.Controls.Backward
+		player.LastDirectionalKeyPressed = player.Controls[ControlBackward]
 	}
 	if player.CurrentInputs[ControlLeft] {
-		player.LastDirectionalKeyPressed = player.Controls.Left
+		player.LastDirectionalKeyPressed = player.Controls[ControlLeft]
 	}
 	if player.CurrentInputs[ControlRight] {
-		player.LastDirectionalKeyPressed = player.Controls.Right
+		player.LastDirectionalKeyPressed = player.Controls[ControlRight]
 	}
 }
 

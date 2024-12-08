@@ -1,7 +1,12 @@
 # Custom First Person For Raylib
 
-Advanced library for advanced managing first person games.<hr>
-Install with `go get github.com/antosmichael07/Raylib-3D-Custom-First-Person`
+Advanced library for advanced managing advanced first person in advanced games.
+
+## Installation
+
+```
+go get -u github.com/antosmichael07/Raylib-3D-Custom-First-Person
+```
 
 ## Example
 
@@ -28,7 +33,7 @@ func main() {
 	world.InitWorld(0.)
 
 	world.BoundingBoxes = []rl.BoundingBox{
-		rl.NewBoundingBox(rl.NewVector3(20, 0, 0), rl.NewVector3(30, 10, 10)),
+		rl.NewBoundingBox(rl.NewVector3(20, 0, 0), rl.NewVector3(30, 5, 10)),
 		rl.NewBoundingBox(rl.NewVector3(40, 5, 0), rl.NewVector3(50, 15, 10)),
 		rl.NewBoundingBox(rl.NewVector3(60, 10, 0), rl.NewVector3(70, 20, 10)),
 	}

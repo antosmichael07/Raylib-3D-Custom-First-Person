@@ -66,7 +66,7 @@ func (world *World) DrawInteractIndicator() {
 		}
 	}
 
-	text := fmt.Sprintf("Press %s to interact", strings.ToUpper(string(world.Player.Controls.Interact)))
+	text := fmt.Sprintf("Press %s to interact", strings.ToUpper(string(world.Player.Controls[ControlInteract])))
 	for i := range world.InteractableBoxes {
 		if world.InteractableBoxes[i].RayCollision.Hit && world.InteractableBoxes[i].RayCollision.Distance <= world.Player.InteractRange {
 			rl.DrawText(text, int32(rl.GetScreenWidth()/2)-rl.MeasureText(text, 30)/2, int32(rl.GetScreenHeight()/2)-30, 30, rl.White)
