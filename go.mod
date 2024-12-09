@@ -1,8 +1,11 @@
 module github.com/antosmichael07/Raylib-3D-Custom-First-Person
 
-go 1.22.2
+go 1.23.3
 
-require github.com/gen2brain/raylib-go/raylib v0.0.0-20241207114308-a9ad86d5018c
+require (
+	github.com/chewxy/math32 v1.11.1
+	github.com/gen2brain/raylib-go/raylib v0.0.0-20241207114308-a9ad86d5018c
+)
 
 require (
 	github.com/ebitengine/purego v0.8.1 // indirect

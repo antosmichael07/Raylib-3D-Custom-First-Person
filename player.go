@@ -1,8 +1,7 @@
 package rl_fp
 
 import (
-	"math"
-
+	"github.com/chewxy/math32"
 	rl "github.com/gen2brain/raylib-go/raylib"
 )
 
@@ -132,8 +131,8 @@ func (player *Player) GetPositionXYZNextFrame() rl.Vector3 {
 	final_speed := current_speed * player.FrameTime
 
 	speeds := Vector2XZ{
-		float32(math.Cos(float64(player.Rotation.X))) * final_speed,
-		float32(math.Sin(float64(player.Rotation.X))) * final_speed,
+		math32.Cos(player.Rotation.X) * final_speed,
+		math32.Sin(player.Rotation.X) * final_speed,
 	}
 
 	if player.CurrentInputs[ControlForward] || player.LastDirectionalKeyPressed == player.Controls[ControlForward] {
