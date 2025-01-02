@@ -1,217 +1,80 @@
-package rl_fp
+package rlfp
 
 import (
 	rl "github.com/gen2brain/raylib-go/raylib"
 )
 
-type Vector2XZ struct {
-	X float32
-	Z float32
-}
-
+// Used for managing world around the player and the player itself
 type World struct {
-	Player            Player
-	Ground            float32
-	BoundingBoxes     []rl.BoundingBox
-	TriggerBoxes      []TriggerBox
+	Player Player
+	Ground float32
+	// Value which is subtracted from player's and object's Y velocity
+	Gravity float32
+	// Used for moving when players have different target FPS
+	FrameTime     float32
+	LastFrameTime float32
+	// Boxes with collisions
+	BoundingBoxes []rl.BoundingBox
+	// Boxes that activate when a player walks into them
+	TriggerBoxes []TriggerBox
+	// Boxes that activate when a player presses a key when looking at them
 	InteractableBoxes []InteractableBox
+	// Minimum value for working with floats
+	FloatPrecision float32
+	// Distance where the player has to be in to update certain elements in the world
+	CalculationDistance float32
+	// For interactable boxes, so they don't update their state every frame
+	AlreadySetInteractStates bool
 }
 
-func (world *World) InitWorld(ground float32) {
-	world.Player.InitPlayer()
+// Initializes default values for the world
+//
+// #1 argument ground: float32 - height of the ground
+func (world *World) Init(ground float32) {
+	world.Player.Init()
 	world.Ground = ground
+	world.Gravity = 15.
+	world.FrameTime = 0.
+	world.FloatPrecision = .0001
+	// The actual distance is math32.Sqrt(world.CalculationDistance)
+	// This is because the program is faster without square rooting and it has the same effect
+	world.CalculationDistance = 40000.
+	world.AlreadySetInteractStates = false
+}
+
+// Creates a new world with the player at the specified position, should be called when loading a save
+//
+// #1 argument position: rl.Vector3 - position of the player
+//
+// #2 argument rotation: rl.Vector2 - rotation of the player
+//
+// #3 argument is_crouching: bool - if the player is crouching
+func (world *World) New(position rl.Vector3, rotation rl.Vector2, is_crouching bool) {
+	world.Player.New(position, rotation, is_crouching)
 	world.BoundingBoxes = []rl.BoundingBox{}
 	world.TriggerBoxes = []TriggerBox{}
 	world.InteractableBoxes = []InteractableBox{}
 }
 
-func (world *World) Update() {
-	world.UpdateVariables()
-	world.Player.UpdateRotation()
-	world.UpdatePlayerPositionByStepping()
-	world.UpdatePlayerPosition()
+// Adds a new bounding box to the world
+//
+// #1 argument box: rl.BoundingBox - bounding box to add
+func (world *World) AddBoundingBox(box rl.BoundingBox) {
+	world.BoundingBoxes = append(world.BoundingBoxes, box)
+}
+
+// Updates every value in the world struct, should be called every frame
+//
+// #1 argument windowWidth: int32 - width of the window
+//
+// #2 argument windowHeight: int32 - height of the window
+func (world *World) Update(windowWidth, windowHeight int32) {
+	world.LastFrameTime = world.FrameTime
+	world.FrameTime = rl.GetFrameTime()
+	if world.FrameTime > 1. {
+		world.FrameTime = 1.
+	}
+	world.UpdatePlayer()
 	world.UpdateTriggerBoxes()
-	world.UpdateInteractableBoxes()
-	world.Player.UpdateCamera()
-}
-
-func (world *World) UpdateVariables() {
-	world.Player.UpdateCurrentInputs()
-	world.Player.UpdateFrameTime()
-	world.Player.UpdateLastDirectionalKeyPressed()
-	world.UpdatePlayerCurrentSpeed()
-	world.UpdatePlayerYVelocity()
-}
-
-func (player *Player) UpdateCurrentInputs() {
-	player.CurrentInputs[ControlForward] = rl.IsKeyDown(player.Controls[ControlForward])
-	player.CurrentInputs[ControlBackward] = rl.IsKeyDown(player.Controls[ControlBackward])
-	player.CurrentInputs[ControlLeft] = rl.IsKeyDown(player.Controls[ControlLeft])
-	player.CurrentInputs[ControlRight] = rl.IsKeyDown(player.Controls[ControlRight])
-	player.CurrentInputs[ControlJump] = rl.IsKeyDown(player.Controls[ControlJump])
-	player.CurrentInputs[ControlCrouch] = rl.IsKeyDown(player.Controls[ControlCrouch])
-	player.CurrentInputs[ControlSprint] = rl.IsKeyDown(player.Controls[ControlSprint])
-	player.CurrentInputs[ControlZoom] = rl.IsKeyDown(player.Controls[ControlZoom])
-	player.CurrentInputs[ControlInteract] = rl.IsKeyDown(player.Controls[ControlInteract])
-}
-
-func (player *Player) UpdateFrameTime() {
-	player.FrameTime = rl.GetFrameTime() * 60
-}
-
-func (player *Player) UpdateLastDirectionalKeyPressed() {
-	if player.CurrentInputs[ControlForward] {
-		player.LastDirectionalKeyPressed = player.Controls[ControlForward]
-	}
-	if player.CurrentInputs[ControlBackward] {
-		player.LastDirectionalKeyPressed = player.Controls[ControlBackward]
-	}
-	if player.CurrentInputs[ControlLeft] {
-		player.LastDirectionalKeyPressed = player.Controls[ControlLeft]
-	}
-	if player.CurrentInputs[ControlRight] {
-		player.LastDirectionalKeyPressed = player.Controls[ControlRight]
-	}
-}
-
-func (world *World) UpdatePlayerCurrentSpeed() {
-	final_speed := world.Player.Speed.Acceleration * world.Player.FrameTime
-	is_player_on_ground_next_frame := world.IsPlayerOnGroundNextFrame()
-
-	if !world.Player.CurrentInputs[ControlForward] && !world.Player.CurrentInputs[ControlBackward] && !world.Player.CurrentInputs[ControlLeft] && !world.Player.CurrentInputs[ControlRight] {
-		if world.Player.Speed.Current > 0. {
-			world.Player.Speed.Current -= final_speed
-		} else {
-			world.Player.Speed.Current = 0.
-		}
-	} else if (!world.Player.CurrentInputs[ControlSprint] || !is_player_on_ground_next_frame) && world.Player.Speed.Current > world.Player.Speed.Normal {
-		world.Player.Speed.Current -= final_speed
-	}
-	if world.Player.IsCrouching && world.Player.Speed.Current > world.Player.Speed.Sneak {
-		world.Player.Speed.Current -= final_speed
-	}
-
-	if world.Player.Speed.Current <= world.Player.Speed.Normal && (world.Player.CurrentInputs[ControlForward] || world.Player.CurrentInputs[ControlBackward] || world.Player.CurrentInputs[ControlLeft] || world.Player.CurrentInputs[ControlRight]) && (!world.Player.CurrentInputs[ControlSprint] || !is_player_on_ground_next_frame) && !world.Player.CurrentInputs[ControlCrouch] {
-		world.Player.Speed.Current += final_speed
-	}
-	if world.Player.CurrentInputs[ControlSprint] && !world.Player.IsCrouching && is_player_on_ground_next_frame && world.Player.Speed.Current <= world.Player.Speed.Sprint && (world.Player.CurrentInputs[ControlForward] || world.Player.CurrentInputs[ControlBackward] || world.Player.CurrentInputs[ControlLeft] || world.Player.CurrentInputs[ControlRight]) {
-		world.Player.Speed.Current += final_speed
-	}
-	if world.Player.CurrentInputs[ControlCrouch] && world.Player.Speed.Current <= world.Player.Speed.Sneak && (world.Player.CurrentInputs[ControlForward] || world.Player.CurrentInputs[ControlBackward] || world.Player.CurrentInputs[ControlLeft] || world.Player.CurrentInputs[ControlRight]) {
-		world.Player.Speed.Current += final_speed
-	}
-}
-
-func (world *World) UpdatePlayerYVelocity() {
-	world.Player.YVelocity -= world.Player.Gravity * world.Player.FrameTime
-
-	if world.CheckPlayerCollisionsYNextFrame() {
-		world.Player.YVelocity = 0.
-		return
-	}
-	if world.Player.Position.Y+world.Player.YVelocity*world.Player.FrameTime-(world.Player.Scale.Y/2) < world.Ground {
-		world.Player.YVelocity = 0.
-		world.Player.Position.Y = world.Ground + world.Player.Scale.Y/2
-	}
-}
-
-func (player *Player) UpdateRotation() {
-	mouse_delta := rl.GetMouseDelta()
-	if player.CurrentInputs[ControlZoom] {
-		player.Rotation.X += mouse_delta.X * player.MouseSensitivity.Zoom
-		player.Rotation.Y -= mouse_delta.Y * player.MouseSensitivity.Zoom
-	} else {
-		player.Rotation.X += mouse_delta.X * player.MouseSensitivity.Normal
-		player.Rotation.Y -= mouse_delta.Y * player.MouseSensitivity.Normal
-	}
-
-	if player.Rotation.Y > 1.57 {
-		player.Rotation.Y = 1.57
-	}
-	if player.Rotation.Y < -1.57 {
-		player.Rotation.Y = -1.57
-	}
-}
-
-func (world *World) UpdatePlayerPositionByStepping() {
-	world.Player.Stepped = false
-	player_position_y := world.Player.Position.Y
-	world.Player.Position.Y += world.Player.StepHeight + 0.0001
-
-	tmp_not_collisions_y_next_frame := !world.CheckPlayerCollisionsYNextFrame()
-	tmp_not_collisions_xyz_next_frame := !world.CheckPlayerCollisionsXYZNextFrame()
-	tmp_collisions_xyz_next_frame_after_falling_x, tmp_collisions_xyz_next_frame_after_falling_y := world.CheckPlayerCollisionsXZNextFrameAfterFalling()
-
-	world.Player.Position.Y = player_position_y
-
-	player_position_xyz_next_frame := world.Player.GetPositionXYZNextFrame()
-
-	if tmp_not_collisions_y_next_frame && tmp_not_collisions_xyz_next_frame && world.CheckPlayerCollisionsXYZNextFrame() && world.Player.YVelocity == 0. {
-		world.Player.Position.Y = (world.GetPlayerCollisionsXZHighestPoint() + world.Player.Scale.Y/2) + 0.0001
-		world.Player.Position.X = player_position_xyz_next_frame.X
-		world.Player.Position.Z = player_position_xyz_next_frame.Z
-		world.Player.Stepped = true
-		return
-	}
-
-	collision_x, collision_z := world.CheckPlayerCollisionsXZNextFrameAfterFalling()
-
-	if tmp_not_collisions_y_next_frame && !tmp_collisions_xyz_next_frame_after_falling_x && collision_x && world.Player.YVelocity == 0. {
-		world.Player.Position.Y = (world.GetPlayerCollisionsXHighestPoint() + world.Player.Scale.Y/2) + 0.0001
-		world.Player.Position.X = player_position_xyz_next_frame.X
-		world.Player.Stepped = true
-		return
-	}
-	if tmp_not_collisions_y_next_frame && !tmp_collisions_xyz_next_frame_after_falling_y && collision_z && world.Player.YVelocity == 0. {
-		world.Player.Position.Y = (world.GetPlayerCollisionsZHighestPoint() + world.Player.Scale.Y/2) + 0.0001
-		world.Player.Position.Z = player_position_xyz_next_frame.Z
-		world.Player.Stepped = true
-		return
-	}
-}
-
-func (world *World) UpdatePlayerPosition() {
-	half_crouch_scale := world.Player.ConstScale.Crouch / 2
-
-	if world.Player.CurrentInputs[ControlCrouch] {
-		world.Player.Scale.Y = world.Player.ConstScale.Crouch
-		if !world.Player.IsCrouching {
-			world.Player.Position.Y -= half_crouch_scale
-		}
-		world.Player.IsCrouching = true
-	} else if world.CanPlayerUncrouch() {
-		world.Player.Scale.Y = world.Player.ConstScale.Normal
-		if world.Player.IsCrouching {
-			world.Player.Position.Y += half_crouch_scale
-		}
-		world.Player.IsCrouching = false
-	}
-	if world.Player.CurrentInputs[ControlJump] && world.Player.YVelocity == 0. && world.IsPlayerOnGroundNextFrame() && !world.Player.IsCrouching {
-		world.Player.YVelocity = world.Player.JumpPower
-	}
-
-	world.Player.Position.Y += world.Player.YVelocity * world.Player.FrameTime
-
-	if !world.Player.Stepped {
-		player_position_next_frame := world.Player.GetPositionXYZNextFrame()
-
-		collisions_x, collisions_z := world.CheckPlayerCollisionsXZNextFrame()
-		if collisions_x && collisions_z {
-			return
-		} else if collisions_x {
-			world.Player.Position.Z = player_position_next_frame.Z
-			return
-		} else if collisions_z {
-			world.Player.Position.X = player_position_next_frame.X
-			return
-		}
-
-		if world.CheckPlayerCollisionsXYZNextFrame() {
-			world.Player.Position.X = player_position_next_frame.X
-			return
-		}
-
-		world.Player.Position.X = player_position_next_frame.X
-		world.Player.Position.Z = player_position_next_frame.Z
-	}
+	world.UpdateInteractableBoxes(windowWidth, windowHeight)
 }

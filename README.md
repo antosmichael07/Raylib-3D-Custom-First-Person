@@ -16,7 +16,7 @@ package main
 import (
 	"fmt"
 
-	rl_fp "github.com/antosmichael07/Raylib-3D-Custom-First-Person"
+	rlfp "github.com/antosmichael07/Raylib-3D-Custom-First-Person"
 	rl "github.com/gen2brain/raylib-go/raylib"
 )
 
@@ -26,34 +26,30 @@ func main() {
 	rl.ToggleFullscreen()
 	rl.DisableCursor()
 	rl.SetTargetFPS(int32(rl.GetMonitorRefreshRate(current_monitor)))
-	rl.SetExitKey(-1)
 	defer rl.CloseWindow()
 
-	world := rl_fp.World{}
-	world.InitWorld(0.)
+	world := rlfp.World{}
+	world.Init(0.)
+	world.New(rl.NewVector3(0., 0., 0.), rl.NewVector2(0., 0.), false)
 
-	world.BoundingBoxes = []rl.BoundingBox{
-		rl.NewBoundingBox(rl.NewVector3(20, 0, 0), rl.NewVector3(30, 5, 10)),
-		rl.NewBoundingBox(rl.NewVector3(40, 5, 0), rl.NewVector3(50, 15, 10)),
-		rl.NewBoundingBox(rl.NewVector3(60, 10, 0), rl.NewVector3(70, 20, 10)),
-	}
-	world.TriggerBoxes = []rl_fp.TriggerBox{
-		rl_fp.NewTriggerBox(rl.NewBoundingBox(rl.NewVector3(-10, 0, 50), rl.NewVector3(0, 10, 60))),
-		rl_fp.NewTriggerBox(rl.NewBoundingBox(rl.NewVector3(-10, 20, 70), rl.NewVector3(0, 30, 80))),
-	}
-	world.InteractableBoxes = []rl_fp.InteractableBox{
-		rl_fp.NewInteractableBox(rl.NewBoundingBox(rl.NewVector3(-10, 0, -60), rl.NewVector3(0, 10, -50))),
-		rl_fp.NewInteractableBox(rl.NewBoundingBox(rl.NewVector3(-10, 20, -80), rl.NewVector3(0, 30, -70))),
-	}
+	world.AddBoundingBox(rl.NewBoundingBox(rl.NewVector3(2., 0., 0.), rl.NewVector3(3., .4, 1.)))
+	world.AddBoundingBox(rl.NewBoundingBox(rl.NewVector3(4., .5, 0.), rl.NewVector3(5., 1., 1.)))
+	world.AddBoundingBox(rl.NewBoundingBox(rl.NewVector3(6., 1., 0.), rl.NewVector3(7., 1.5, 1.)))
+
+	world.AddTriggerBox(rl.NewBoundingBox(rl.NewVector3(-1., 0., 5.), rl.NewVector3(0., 1., 6.)))
+	world.AddTriggerBox(rl.NewBoundingBox(rl.NewVector3(-1., 2., 7.), rl.NewVector3(0., 3., 8.)))
+
+	world.AddInteractableBox(rl.NewBoundingBox(rl.NewVector3(-1., 0., -6.), rl.NewVector3(0., 1., -5.)))
+	world.AddInteractableBox(rl.NewBoundingBox(rl.NewVector3(-1., 2., -8.), rl.NewVector3(0., 3., -7.)))
 
 	for !rl.WindowShouldClose() {
-		world.Update()
+		world.Update(int32(rl.GetMonitorWidth(current_monitor)), int32(rl.GetMonitorHeight(current_monitor)))
 
 		rl.BeginDrawing()
 		rl.ClearBackground(rl.Black)
 		rl.BeginMode3D(world.Player.Camera)
 
-		rl.DrawGrid(100, 10.)
+		rl.DrawGrid(100, 1.)
 
 		for i := range world.BoundingBoxes {
 			rl.DrawBoundingBox(world.BoundingBoxes[i], rl.Red)
@@ -65,9 +61,9 @@ func main() {
 			rl.DrawBoundingBox(world.InteractableBoxes[i].BoundingBox, rl.Blue)
 		}
 
-		rl.EndMode3D()
+		world.DrawBoundingBoxOver()
 
-		world.DrawInteractIndicator()
+		rl.EndMode3D()
 
 		for i := range world.TriggerBoxes {
 			if world.TriggerBoxes[i].Triggered {
