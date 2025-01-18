@@ -44,7 +44,7 @@ func (world *World) checkPlayerCollisionsXYNextFrame(y float32) bool {
 	if world.Player.OffsetNextFrame.X > 0 {
 		bounding_box.Max.X += world.Player.OffsetNextFrame.X
 	} else {
-		bounding_box.Min.X += world.Player.OffsetNextFrame.X
+		bounding_box.Min.X += world.Player.OffsetNextFrame.X - world.FrameTime
 	}
 
 	bounding_box.Min.Y = y
